@@ -2,6 +2,7 @@ com\nhtg\web\controller\SurveyController.class
 com\nhtg\web\repository\SurveyRepository.class
 com\nhtg\web\model\Survey.class
 com\nhtg\web\model\SurveyQuestion$QuestionType.class
+com\nhtg\web\config\HibernateUtils.class
 com\nhtg\web\repository\UserRepository.class
 com\nhtg\web\model\Survey$Status.class
 com\nhtg\web\service\SurveyService.class
