@@ -4,7 +4,11 @@ const Footer = () => {
   return (
     <footer className="bg-info text-light py-4 mt-auto">
       <Container>
+<<<<<<< HEAD
         <Row>
+=======
+        <Row >
+>>>>>>> a18e969 (Add Chat)
           <Col md={4} className="mb-3">
             <h5>Liên hệ</h5>
             <p>Điện thoại: 0123 456 789</p>
