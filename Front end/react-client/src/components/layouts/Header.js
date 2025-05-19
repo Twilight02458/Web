@@ -1,11 +1,3 @@
-<<<<<<< HEAD
-import React from "react";
-import { Link } from "react-router-dom";
-import { Navbar, Nav, Container } from "react-bootstrap";
-import { FaHome, FaUserPlus, FaSignInAlt } from "react-icons/fa";
-
-const Header = () => {
-=======
 import React, { useContext } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Navbar, Nav, Container, NavDropdown, Image } from "react-bootstrap";
@@ -27,30 +19,10 @@ const Header = () => {
 
   const isLoginPage = location.pathname === "/login";
 
->>>>>>> a18e969 (Add Chat)
   return (
     <Navbar bg="dark" variant="dark" expand="lg" collapseOnSelect>
       <Container>
         <Navbar.Brand as={Link} to="/" className="fw-bold fs-4 text-warning">
-<<<<<<< HEAD
-          🛒 eCommerce
-        </Navbar.Brand>
-        <Navbar.Toggle aria-controls="basic-navbar-nav" />
-        <Navbar.Collapse id="basic-navbar-nav">
-          <Nav className="ms-auto">
-            <Nav.Link as={Link} to="/" className="px-3 text-light">
-              <FaHome className="me-1" />
-              Trang chủ
-            </Nav.Link>
-            <Nav.Link as={Link} to="/register" className="px-3 text-success">
-              <FaUserPlus className="me-1" />
-              Đăng ký
-            </Nav.Link>
-            <Nav.Link as={Link} to="/login" className="px-3 text-danger">
-              <FaSignInAlt className="me-1" />
-              Đăng nhập
-            </Nav.Link>
-=======
           MyApartment
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
@@ -117,7 +89,6 @@ const Header = () => {
                 <NavDropdown.Item onClick={logout}>Đăng xuất</NavDropdown.Item>
               </NavDropdown>
             )}
->>>>>>> a18e969 (Add Chat)
           </Nav>
         </Navbar.Collapse>
       </Container>
@@ -125,8 +96,4 @@ const Header = () => {
   );
 };
 
-<<<<<<< HEAD
 export default Header;
-=======
-export default Header;
->>>>>>> a18e969 (Add Chat)

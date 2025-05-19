@@ -1,0 +1,30 @@
+# Ignore WAR files
+*.war
+
+# Ignore JSON files
+*.json
+
+# Common Java/Spring ignores
+target/
+*.class
+*.jar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# IDE specific files
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# Logs
+*.log
+logs/
+
+# OS specific files
+.DS_Store
+Thumbs.db 
