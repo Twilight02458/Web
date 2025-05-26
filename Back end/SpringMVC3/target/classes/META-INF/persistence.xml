@@ -12,5 +12,6 @@
     <class>com.ltlt.pojo.Invoice</class>
     <class>com.ltlt.pojo.Surveyanswer</class>
     <class>com.ltlt.pojo.User</class>
+    <class>com.ltlt.pojo.PaymentItem</class>
   </persistence-unit>
 </persistence>

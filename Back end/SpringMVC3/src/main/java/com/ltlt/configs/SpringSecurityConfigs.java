@@ -54,13 +54,38 @@ public class SpringSecurityConfigs {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/login").permitAll()
+                // Các route admin (thường server-rendered)
+                .requestMatchers("/admin/**").hasRole("ADMIN")
+                .requestMatchers("/", "/login").authenticated()
+                // API client React
+                .requestMatchers("/api/login", "/api/payment/vnpay-return").permitAll()
                 .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
+                .requestMatchers("/api/payment/**").authenticated()
                 .requestMatchers("/api/**").authenticated()
+                // Các request còn lại có thể tùy chỉnh
                 .anyRequest().permitAll()
                 )
-                .addFilterBefore(new JwtFilter(), UsernamePasswordAuthenticationFilter.class)
-                .sessionManagement(session -> session.disable());
+                .exceptionHandling(exception -> exception
+                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                    response.sendRedirect("/SpringMVC3/login?error=accessDenied");
+                })
+                )
+                // Cấu hình form login cho admin (server rendered)
+                .formLogin(form -> form
+                .loginPage("/login") // trang login Thymeleaf
+                .loginProcessingUrl("/login") // POST login form Thymeleaf
+                .defaultSuccessUrl("/admin/home", true)
+                .failureUrl("/login?error=true")
+                .permitAll()
+                )
+                .logout(logout -> logout
+                .logoutUrl("/logout")
+                .logoutSuccessUrl("/login?logout")
+                .permitAll()
+                )
+                // Thêm JWT filter cho API
+                .addFilterBefore(new JwtFilter(), UsernamePasswordAuthenticationFilter.class) // **Không disable session** để formLogin hoạt động
+                ;
 
         return http.build();
     }

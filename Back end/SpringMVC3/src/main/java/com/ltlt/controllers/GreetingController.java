@@ -20,7 +20,7 @@ public class GreetingController {
     @Autowired
     private UserService userService;
 
-    @RequestMapping("/")
+    @RequestMapping("/admin/home")
     public String home(Model model) {
         return "home";  // Trả về file home.html
     }

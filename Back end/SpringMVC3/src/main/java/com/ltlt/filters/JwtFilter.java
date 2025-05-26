@@ -18,43 +18,56 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 public class JwtFilter implements Filter {
 
+    private static final List<String> EXCLUDED_PATHS = List.of(
+            "/api/login",
+            "/api/payment/vnpay-return"
+    );
+
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
+        HttpServletResponse httpResponse = (HttpServletResponse) response;
 
-        // Chỉ kiểm tra với các endpoint cần bảo vệ
         String uri = httpRequest.getRequestURI();
         String ctx = httpRequest.getContextPath();
-        if (uri.startsWith(ctx + "/api/secure") || uri.startsWith(ctx + "/api/admin")|| uri.startsWith(ctx + "/api/user")) {
-            String header = httpRequest.getHeader("Authorization");
+        String path = uri.substring(ctx.length()); // Lấy path chuẩn
 
-            if (header == null || !header.startsWith("Bearer ")) {
-                ((HttpServletResponse) response).sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing or invalid Authorization header.");
-                return;
-            } else {
-                String token = header.substring(7);
-                try {
-                    String username = JwtUtils.validateTokenAndGetUsername(token);
-                    String role = JwtUtils.getRoleFromToken(token); // bạn cần viết hàm này
-
-                    if (username != null && role != null) {
-                        List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(role));
-                        UsernamePasswordAuthenticationToken authentication
-                                = new UsernamePasswordAuthenticationToken(username, null, authorities);
-                        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-                        chain.doFilter(request, response);
-                        return;
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace(); // Log lỗi thực tế
-                }
-            }
-            ((HttpServletResponse) response).sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token không hợp lệ hoặc hết hạn");
+        // Nếu path nằm trong danh sách được loại trừ → bỏ qua filter
+        if (EXCLUDED_PATHS.contains(path)) {
+            chain.doFilter(request, response);
             return;
         }
 
-        // Các endpoint khác không cần kiểm tra JWT
+        // Còn lại là các API cần xác thực
+        if (path.startsWith("/api/")) {
+            String header = httpRequest.getHeader("Authorization");
+
+            if (header == null || !header.startsWith("Bearer ")) {
+                httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing or invalid Authorization header.");
+                return;
+            }
+
+            String token = header.substring(7);
+            try {
+                String username = JwtUtils.validateTokenAndGetUsername(token);
+                String role = JwtUtils.getRoleFromToken(token);
+
+                if (username != null && role != null) {
+                    List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(role));
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(username, null, authorities);
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                    chain.doFilter(request, response);
+                    return;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token không hợp lệ hoặc hết hạn");
+            return;
+        }
+
+        // Các request khác không cần JWT
         chain.doFilter(request, response);
     }
 }

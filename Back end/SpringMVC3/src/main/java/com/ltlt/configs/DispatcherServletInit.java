@@ -4,6 +4,8 @@
  */
 package com.ltlt.configs;
 
+import com.ltlt.filters.JwtFilter;
+import jakarta.servlet.Filter;
 import jakarta.servlet.MultipartConfigElement;
 import jakarta.servlet.ServletRegistration;
 import org.springframework.context.annotation.ComponentScan;
@@ -20,7 +22,8 @@ public class DispatcherServletInit extends AbstractAnnotationConfigDispatcherSer
         return new Class[]{
             ThymeleafConfig.class,
             HibernateConfigs.class,
-            SpringSecurityConfigs.class 
+            SpringSecurityConfigs.class,
+            VnPayConfig.class
         };
     }
 
@@ -44,6 +47,11 @@ public class DispatcherServletInit extends AbstractAnnotationConfigDispatcherSer
         int fileSizeThreshold = 0;
 
         registration.setMultipartConfig(new MultipartConfigElement(location, maxFileSize, maxRequestSize, fileSizeThreshold));
+    }
+    
+    @Override
+    protected Filter[] getServletFilters() {
+        return new Filter[] { new JwtFilter() }; // Filter sẽ áp dụng cho mọi request
     }
     
     
