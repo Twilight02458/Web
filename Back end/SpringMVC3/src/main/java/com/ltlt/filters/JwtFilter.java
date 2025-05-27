@@ -18,22 +18,32 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 public class JwtFilter implements Filter {
 
+    private static final List<String> EXCLUDED_PATHS = List.of(
+            "/api/login",
+            "/api/payment/vnpay-return"
+    );
+
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
+        HttpServletResponse httpResponse = (HttpServletResponse) response;
 
-        // Check protected endpoints
         String uri = httpRequest.getRequestURI();
         String ctx = httpRequest.getContextPath();
-        if (uri.startsWith(ctx + "/api/secure") || 
-            uri.startsWith(ctx + "/api/admin") || 
-            uri.startsWith(ctx + "/api/user") ||
-            uri.startsWith(ctx + "/secure/notifications")) {
-            
+        String path = uri.substring(ctx.length()); // Lấy path chuẩn
+
+        // Nếu path nằm trong danh sách được loại trừ → bỏ qua filter
+        if (EXCLUDED_PATHS.contains(path)) {
+            chain.doFilter(request, response);
+            return;
+        }
+
+        // Còn lại là các API cần xác thực
+        if (path.startsWith("/api/")) {
             String header = httpRequest.getHeader("Authorization");
 
             if (header == null || !header.startsWith("Bearer ")) {
-                ((HttpServletResponse) response).sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing or invalid Authorization header.");
+                httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing or invalid Authorization header.");
                 return;
             }
 
@@ -44,21 +54,20 @@ public class JwtFilter implements Filter {
 
                 if (username != null && role != null) {
                     List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(role));
-                    UsernamePasswordAuthenticationToken authentication
-                            = new UsernamePasswordAuthenticationToken(username, null, authorities);
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(username, null, authorities);
                     SecurityContextHolder.getContext().setAuthentication(authentication);
-
                     chain.doFilter(request, response);
                     return;
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            ((HttpServletResponse) response).sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired token");
+            httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token không hợp lệ hoặc hết hạn");
             return;
         }
 
-        // Other endpoints don't need JWT check
+        // Các request khác không cần JWT
         chain.doFilter(request, response);
     }
 }

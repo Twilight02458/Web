@@ -54,14 +54,38 @@ public class SpringSecurityConfigs {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/api/login").permitAll()
-                    .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
-                    .requestMatchers("/secure/notifications/**").authenticated()
-                    .requestMatchers("/api/**").authenticated()
-                    .anyRequest().permitAll()
+                // Các route admin (thường server-rendered)
+                .requestMatchers("/admin/**").hasRole("ADMIN")
+                .requestMatchers("/", "/login").authenticated()
+                // API client React
+                .requestMatchers("/api/login", "/api/payment/vnpay-return").permitAll()
+                .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
+                .requestMatchers("/api/payment/**").authenticated()
+                .requestMatchers("/api/**").authenticated()
+                // Các request còn lại có thể tùy chỉnh
+                .anyRequest().permitAll()
                 )
-                .addFilterBefore(new JwtFilter(), UsernamePasswordAuthenticationFilter.class)
-                .sessionManagement(session -> session.disable());
+                .exceptionHandling(exception -> exception
+                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                    response.sendRedirect("/SpringMVC3/login?error=accessDenied");
+                })
+                )
+                // Cấu hình form login cho admin (server rendered)
+                .formLogin(form -> form
+                .loginPage("/login") // trang login Thymeleaf
+                .loginProcessingUrl("/login") // POST login form Thymeleaf
+                .defaultSuccessUrl("/admin/home", true)
+                .failureUrl("/login?error=true")
+                .permitAll()
+                )
+                .logout(logout -> logout
+                .logoutUrl("/logout")
+                .logoutSuccessUrl("/login?logout")
+                .permitAll()
+                )
+                // Thêm JWT filter cho API
+                .addFilterBefore(new JwtFilter(), UsernamePasswordAuthenticationFilter.class) // **Không disable session** để formLogin hoạt động
+                ;
 
         return http.build();
     }
@@ -90,14 +114,18 @@ public class SpringSecurityConfigs {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3000")); // Add your frontend URL
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
-        configuration.setAllowCredentials(true);
-        
+
+        CorsConfiguration config = new CorsConfiguration();
+
+        config.setAllowedOrigins(List.of("http://localhost:3000")); // frontend origin
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        config.setExposedHeaders(List.of("Authorization"));
+        config.setAllowCredentials(true); // Nếu dùng cookie/session
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+        source.registerCorsConfiguration("/**", config);
+
         return source;
     }
 }

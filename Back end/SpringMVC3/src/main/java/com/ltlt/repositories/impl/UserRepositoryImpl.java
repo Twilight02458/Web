@@ -84,16 +84,45 @@ public class UserRepositoryImpl implements UserRepository {
         return this.passwordEncoder.matches(password, u.getPassword());
     }
 
-    @Override
-    public void updateUser(User user) {
-        Session s = this.factory.getObject().getCurrentSession();
-        try {
-            s.update(user);
-        } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, "Error updating user: {0}", ex.getMessage());
-            throw ex;
+   @Override
+public void updateUser(User user) {
+    Session session = this.factory.getObject().getCurrentSession();
+    try {
+        User existingUser = session.get(User.class, user.getId());
+        if (existingUser != null) {
+            // Chỉ cập nhật các trường không null (tùy use case của bạn)
+            if (user.getFirstName() != null)
+                existingUser.setFirstName(user.getFirstName());
+            if (user.getLastName() != null)
+                existingUser.setLastName(user.getLastName());
+            if (user.getEmail() != null)
+                existingUser.setEmail(user.getEmail());
+            if (user.getPhone() != null)
+                existingUser.setPhone(user.getPhone());
+            if (user.getUsername() != null)
+                existingUser.setUsername(user.getUsername());
+            if (user.getPassword() != null)
+                existingUser.setPassword(user.getPassword());
+            if (user.getAvatar() != null)
+                existingUser.setAvatar(user.getAvatar());
+            if (user.getRole() != null)
+                existingUser.setRole(user.getRole());
+
+            // Trường boolean thì kiểm tra với true/false
+            existingUser.setPasswordChanged(user.isPasswordChanged());
+            existingUser.setAvatarUploaded(user.isAvatarUploaded());
+            if (user.isActive() != null)
+                existingUser.setActive(user.isActive());
+
+            session.update(existingUser);
+        } else {
+            throw new IllegalArgumentException("User with ID " + user.getId() + " not found");
         }
+    } catch (Exception ex) {
+        LOGGER.log(Level.SEVERE, "Error updating user: {0}", ex.getMessage());
+        throw ex;
     }
+}
 
     @Override
     public boolean deleteUser(int userId) {

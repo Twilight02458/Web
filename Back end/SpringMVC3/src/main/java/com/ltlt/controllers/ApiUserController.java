@@ -4,8 +4,14 @@
  */
 package com.ltlt.controllers;
 
+import com.ltlt.dto.ResidentPaymentRequest;
 import com.ltlt.pojo.Locker;
+import com.ltlt.pojo.Payment;
+import com.ltlt.pojo.PaymentItem;
 import com.ltlt.pojo.User;
+import com.ltlt.repositories.PaymentItemRepository;
+import com.ltlt.repositories.PaymentRepository;
+import com.ltlt.repositories.UserRepository;
 import com.ltlt.services.LockerService;
 import com.ltlt.services.UserService;
 import com.ltlt.utils.JwtUtils;
@@ -15,10 +21,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -67,7 +75,6 @@ public class ApiUserController {
                         .body(Map.of("errorCode", "WRONG_PASSWORD", "message", "Mật khẩu không đúng"));
             }
 
-           
             String token = JwtUtils.generateToken(user);
             return ResponseEntity.ok().body(Map.of(
                     "token", token,
@@ -142,12 +149,41 @@ public class ApiUserController {
 
     @Autowired
     private LockerService lockerService;
-
+    
     @GetMapping("/user/locker")
     public ResponseEntity<List<Locker>> getPendingLockers(Principal principal) {
         User user = this.userDetailsService.getUserByUsername(principal.getName());
         List<Locker> pendingItems = lockerService.getPendingItems(user.getId());
         return new ResponseEntity<>(pendingItems, HttpStatus.OK);
+    }
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private PaymentRepository paymentRepository;
+    @Autowired
+    private PaymentItemRepository paymentItemRepository;
+
+    @GetMapping("/user/my-payment")
+    public ResponseEntity<?> getMyPayments() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.getUserByUsername(username);
+        System.out.println("User ID: " + user.getId());
+
+
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy người dùng");
+        }
+
+        List<Payment> payments = paymentRepository.getPaymentByUserId(user.getId());
+
+        List<ResidentPaymentRequest> result = payments.stream()
+                .map(p -> {
+                    List<PaymentItem> items = paymentItemRepository.getItemsByPaymentId(p.getId());
+                    return new ResidentPaymentRequest(p, items);
+                })
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(result);
     }
 
 }

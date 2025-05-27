@@ -54,7 +54,8 @@ public class UserServiceImpl implements UserService {
         }
 
         Set<GrantedAuthority> authorities = new HashSet<>();
-        authorities.add(new SimpleGrantedAuthority(u.getRole()));
+        authorities.add(new SimpleGrantedAuthority("ROLE_" + u.getRole()));
+
 
         return new org.springframework.security.core.userdetails.User(
                 u.getUsername(), u.getPassword(), authorities);
@@ -114,36 +115,32 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void deactivateUser(int userId) {
+    public void toggleUserStatus(int userId) {
         User user = this.userRepo.getUserById(userId);
         if (user == null) {
             throw new RuntimeException("User not found");
         }
 
-        user.setActive(false);
-        this.userRepo.updateUser(user);
-    }
-     @Override
-    public void activateUser(int userId) {
-        User user = this.userRepo.getUserById(userId);
-        if (user == null) {
-            throw new RuntimeException("User not found");
-        }
-
-        user.setActive(true);
+        user.setActive(!user.isActive()); // toggle true <-> false
         this.userRepo.updateUser(user);
     }
 
     @Override
-    public void changePassword(int userId, String newPassword) {
-        User user = this.userRepo.getUserById(userId);
-        if (user == null) {
-            throw new RuntimeException("User not found");
-        }
+    public boolean changePassword(int userId, String newPassword) {
+        try {
+            User user = this.userRepo.getUserById(userId);
+            if (user == null) {
+                return false;
+            }
 
-        user.setPassword(this.passwordEncoder.encode(newPassword));
-        user.setPasswordChanged(true);
-        this.userRepo.updateUser(user);
+            user.setPassword(this.passwordEncoder.encode(newPassword));
+            user.setPasswordChanged(true);
+            this.userRepo.updateUser(user);
+            return true;
+        } catch (Exception ex) {
+            LOGGER.log(Level.SEVERE, "Error while changing password", ex);
+            return false;
+        }
     }
 
     @Override
@@ -174,9 +171,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User updateUser(User user) {
-        this.userRepo.updateUser(user);
-        return user;
+    public boolean updateUser(User user) {
+        try {
+            this.userRepo.updateUser(user);
+            return true;
+        } catch (Exception ex) {
+            LOGGER.log(Level.SEVERE, "Error while updating user", ex);
+            return false;
+        }
     }
 
     @Override
@@ -187,6 +189,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<User> getUsers(int page, int size, String keyword) {
         return userRepo.getUsers(page, size, keyword);
+    }
+
+    @Override
+    public User getUserById(int userId) {
+        return this.userRepo.getUserById(userId);
     }
 
 }

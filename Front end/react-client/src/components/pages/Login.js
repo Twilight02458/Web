@@ -39,7 +39,12 @@ const Login = () => {
                 return;
             }
 
-            cookie.save('token', token);
+            cookie.save('token', token, {
+                path: '/',
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'strict'
+            });
+            console.log('Token saved after login:', cookie.load('token'));
 
             if (!passwordChanged || !avatarUploaded) {
                 localStorage.setItem("firstLoginUsername", user.username);

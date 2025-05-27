@@ -5,6 +5,7 @@
 package com.ltlt.pojo;
 
 import jakarta.persistence.Basic;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -14,6 +15,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
@@ -21,6 +23,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.Date;
 
 /**
@@ -32,11 +35,11 @@ import java.util.Date;
 @NamedQueries({
     @NamedQuery(name = "Payment.findAll", query = "SELECT p FROM Payment p"),
     @NamedQuery(name = "Payment.findById", query = "SELECT p FROM Payment p WHERE p.id = :id"),
-    @NamedQuery(name = "Payment.findByFeeType", query = "SELECT p FROM Payment p WHERE p.feeType = :feeType"),
-    @NamedQuery(name = "Payment.findByAmount", query = "SELECT p FROM Payment p WHERE p.amount = :amount"),
+    @NamedQuery(name = "Payment.findByTotalAmount", query = "SELECT p FROM Payment p WHERE p.totalAmount = :totalAmount"),
+    @NamedQuery(name = "Payment.findByStatus", query = "SELECT p FROM Payment p WHERE p.status = :status"),
     @NamedQuery(name = "Payment.findByMethod", query = "SELECT p FROM Payment p WHERE p.method = :method"),
-    @NamedQuery(name = "Payment.findByProofImage", query = "SELECT p FROM Payment p WHERE p.proofImage = :proofImage"),
-    @NamedQuery(name = "Payment.findByPaidAt", query = "SELECT p FROM Payment p WHERE p.paidAt = :paidAt")})
+    @NamedQuery(name = "Payment.findByPaymentDate", query = "SELECT p FROM Payment p WHERE p.paymentDate = :paymentDate"),
+    @NamedQuery(name = "Payment.findByTransactionCode", query = "SELECT p FROM Payment p WHERE p.transactionCode = :transactionCode")})
 public class Payment implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -45,27 +48,27 @@ public class Payment implements Serializable {
     @Basic(optional = false)
     @Column(name = "id")
     private Integer id;
-    @Basic(optional = false)
-    @NotNull
-    @Size(min = 1, max = 10)
-    @Column(name = "fee_type")
-    private String feeType;
     // @Max(value=?)  @Min(value=?)//if you know range of your decimal fields consider using these annotations to enforce field validation
-    @Column(name = "amount")
-    private BigDecimal amount;
     @Basic(optional = false)
     @NotNull
-    @Size(min = 1, max = 8)
+    @Column(name = "total_amount")
+    private BigDecimal totalAmount;
+    @Size(max = 8)
+    @Column(name = "status")
+    private String status;
+    @Size(max = 20)
     @Column(name = "method")
     private String method;
-    @Size(max = 255)
-    @Column(name = "proof_image")
-    private String proofImage;
-    @Column(name = "paid_at")
+    @Column(name = "payment_date")
     @Temporal(TemporalType.TIMESTAMP)
-    private Date paidAt;
+    private Date paymentDate;
+    @Size(max = 100)
+    @Column(name = "transaction_code")
+    private String transactionCode;
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "paymentId")
+    private Collection<PaymentItem> paymentItemCollection;
     @JoinColumn(name = "user_id", referencedColumnName = "id")
-    @ManyToOne
+    @ManyToOne(optional = false)
     private User userId;
 
     public Payment() {
@@ -75,10 +78,9 @@ public class Payment implements Serializable {
         this.id = id;
     }
 
-    public Payment(Integer id, String feeType, String method) {
+    public Payment(Integer id, BigDecimal totalAmount) {
         this.id = id;
-        this.feeType = feeType;
-        this.method = method;
+        this.totalAmount = totalAmount;
     }
 
     public Integer getId() {
@@ -89,20 +91,20 @@ public class Payment implements Serializable {
         this.id = id;
     }
 
-    public String getFeeType() {
-        return feeType;
+    public BigDecimal getTotalAmount() {
+        return totalAmount;
     }
 
-    public void setFeeType(String feeType) {
-        this.feeType = feeType;
+    public void setTotalAmount(BigDecimal totalAmount) {
+        this.totalAmount = totalAmount;
     }
 
-    public BigDecimal getAmount() {
-        return amount;
+    public String getStatus() {
+        return status;
     }
 
-    public void setAmount(BigDecimal amount) {
-        this.amount = amount;
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public String getMethod() {
@@ -113,20 +115,28 @@ public class Payment implements Serializable {
         this.method = method;
     }
 
-    public String getProofImage() {
-        return proofImage;
+    public Date getPaymentDate() {
+        return paymentDate;
     }
 
-    public void setProofImage(String proofImage) {
-        this.proofImage = proofImage;
+    public void setPaymentDate(Date paymentDate) {
+        this.paymentDate = paymentDate;
     }
 
-    public Date getPaidAt() {
-        return paidAt;
+    public String getTransactionCode() {
+        return transactionCode;
     }
 
-    public void setPaidAt(Date paidAt) {
-        this.paidAt = paidAt;
+    public void setTransactionCode(String transactionCode) {
+        this.transactionCode = transactionCode;
+    }
+
+    public Collection<PaymentItem> getPaymentItemCollection() {
+        return paymentItemCollection;
+    }
+
+    public void setPaymentItemCollection(Collection<PaymentItem> paymentItemCollection) {
+        this.paymentItemCollection = paymentItemCollection;
     }
 
     public User getUserId() {

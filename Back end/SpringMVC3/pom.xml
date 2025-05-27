@@ -86,11 +86,6 @@
             <artifactId>nimbus-jose-jwt</artifactId>
             <version>10.1</version>
         </dependency>
-        <dependency>
-            <groupId>com.google.firebase</groupId>
-            <artifactId>firebase-admin</artifactId>
-            <version>9.4.3</version>
-        </dependency>
     </dependencies>
     
     <build>
@@ -102,13 +97,14 @@
                 <configuration>
                     <source>17</source>
                     <target>17</target>
+                    <arg>-parameters</arg>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
                 <version>3.4.0</version>
-            </plugin>
+            </plugin>        
         </plugins>
     </build>
 </project>

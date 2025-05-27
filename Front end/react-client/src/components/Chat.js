@@ -8,10 +8,13 @@ import {
   onSnapshot,
   query,
   orderBy,
+  or,
+  and,
 } from "firebase/firestore";
 import { useNavigate, useParams } from "react-router-dom";
 import { Alert, Spinner } from "react-bootstrap";
 import { MyUserContext } from "../configs/Contexts";
+import SupportBot from "./SupportBot";
 
 import "../styles/Chat.css";
 
@@ -39,11 +42,28 @@ export const Chat = ({ room: propRoom }) => {
       console.log("Setting up chat for room:", room);
       console.log("Current user:", user);
 
-    const queryMessages = query(
+      let queryMessages;
+      if (room === "support") {
+        // For support room, only show messages between the current user and the bot
+        queryMessages = query(
+          messagesRef,
+          and(
+            or(
+              where("userId", "==", user.id),
+              where("userId", "==", "bot")
+            ),
+            where("room", "==", `support_${user.id}`)
+          ),
+          orderBy("createdAt", "asc")
+        );
+      } else {
+        // For other rooms, show all messages in the room
+        queryMessages = query(
       messagesRef,
       where("room", "==", room),
         orderBy("createdAt", "asc")
     );
+      }
 
       const unsubscribe = onSnapshot(
         queryMessages,
@@ -104,7 +124,7 @@ export const Chat = ({ room: propRoom }) => {
       createdAt: serverTimestamp(),
         user: user.username || user.email,
         userId: user.id,
-      room,
+        room: room === "support" ? `support_${user.id}` : room,
       };
 
       console.log("Message data:", messageData);
@@ -138,8 +158,9 @@ export const Chat = ({ room: propRoom }) => {
 
   return (
     <div className="chat-app">
+      {room === "support" && <SupportBot room={`support_${user.id}`} user={user} />}
       <div className="header">
-        <h1>Welcome to: {room.toUpperCase()}</h1>
+        <h1>Welcome to: {room === "support" ? "Private Support Chat" : room.toUpperCase()}</h1>
       </div>
       
       {error && (
@@ -164,7 +185,9 @@ export const Chat = ({ room: propRoom }) => {
       <div className="messages">
           {messages.length === 0 ? (
             <div className="text-center p-3 text-muted">
-              No messages yet. Be the first to send a message!
+              {room === "support" 
+                ? "Start a conversation with our support bot. How can we help you today?"
+                : "No messages yet. Be the first to send a message!"}
             </div>
           ) : (
             messages.map((message) => (
@@ -193,7 +216,7 @@ export const Chat = ({ room: propRoom }) => {
           value={newMessage}
           onChange={(event) => setNewMessage(event.target.value)}
           className="new-message-input"
-          placeholder="Type your message here..."
+          placeholder={room === "support" ? "Type your support question here..." : "Type your message here..."}
           disabled={loading}
         />
         <button 

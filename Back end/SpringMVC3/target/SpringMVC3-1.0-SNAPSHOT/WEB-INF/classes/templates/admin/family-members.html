@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head th:replace="base :: bootstrap">
+        <title>Quản lý thành viên</title>
+    </head>
+    <body>
+        <div th:replace="base :: header"></div>
+        
+        <div class="container mt-4">
+            <h2>Quản lý thành viên</h2>
+            
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Họ và tên</th>
+                            <th>CMND/CCCD</th>
+                            <th>Số điện thoại</th>
+                            <th>Quan hệ</th>
+                            <th>Trạng thái</th>
+                            <th>Thẻ gửi xe</th>
+                            <th>Thẻ ra vào</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="member : ${familyMembers}">
+                            <td th:text="${member.id}"></td>
+                            <td th:text="${member.fullName}"></td>
+                            <td th:text="${member.idNumber}"></td>
+                            <td th:text="${member.phone}"></td>
+                            <td th:text="${member.relationship}"></td>
+                            <td>
+                                <span th:if="${member.status == 'PENDING'}" class="badge bg-warning">Chờ duyệt</span>
+                                <span th:if="${member.status == 'APPROVED'}" class="badge bg-success">Đã duyệt</span>
+                                <span th:if="${member.status == 'REJECTED'}" class="badge bg-danger">Từ chối</span>
+                            </td>
+                            <td>
+                                <span th:if="${member.hasParkingCard}" class="badge bg-success">Có</span>
+                                <span th:unless="${member.hasParkingCard}" class="badge bg-danger">Không</span>
+                            </td>
+                            <td>
+                                <span th:if="${member.hasGateAccess}" class="badge bg-success">Có</span>
+                                <span th:unless="${member.hasGateAccess}" class="badge bg-danger">Không</span>
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <button th:if="${member.status == 'PENDING'}" 
+                                            class="btn btn-success btn-sm"
+                                            th:onclick="'approveMember(' + ${member.id} + ')'">
+                                        Duyệt
+                                    </button>
+                                    <button th:if="${member.status == 'PENDING'}" 
+                                            class="btn btn-danger btn-sm"
+                                            th:onclick="'rejectMember(' + ${member.id} + ')'">
+                                        Từ chối
+                                    </button>
+                                    <button th:if="${member.status == 'APPROVED'}" 
+                                            class="btn btn-primary btn-sm"
+                                            th:onclick="'toggleParkingCard(' + ${member.id} + ')'">
+                                        Thẻ gửi xe
+                                    </button>
+                                    <button th:if="${member.status == 'APPROVED'}" 
+                                            class="btn btn-info btn-sm"
+                                            th:onclick="'toggleGateAccess(' + ${member.id} + ')'">
+                                        Thẻ ra vào
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div th:replace="base :: footer"></div>
+        
+        <script>
+            function approveMember(id) {
+                if (confirm('Bạn có chắc chắn muốn duyệt thành viên này?')) {
+                    fetch(`/api/secure/family-members/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            status: 'APPROVED'
+                        })
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.text().then(text => {
+                                throw new Error(`HTTP error! status: ${response.status}, message: ${text}`);
+                            });
+                        }
+                        location.reload();
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Có lỗi xảy ra khi duyệt thành viên: ' + error.message);
+                    });
+                }
+            }
+            
+            function rejectMember(id) {
+                if (confirm('Bạn có chắc chắn muốn từ chối thành viên này?')) {
+                    fetch(`/api/secure/family-members/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            status: 'REJECTED'
+                        })
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.text().then(text => {
+                                throw new Error(`HTTP error! status: ${response.status}, message: ${text}`);
+                            });
+                        }
+                        location.reload();
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Có lỗi xảy ra khi từ chối thành viên: ' + error.message);
+                    });
+                }
+            }
+            
+            function toggleParkingCard(id) {
+                fetch(`/api/secure/family-members/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        hasParkingCard: true
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.text().then(text => {
+                            throw new Error(`HTTP error! status: ${response.status}, message: ${text}`);
+                        });
+                    }
+                    location.reload();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Có lỗi xảy ra khi cập nhật thẻ gửi xe: ' + error.message);
+                });
+            }
+            
+            function toggleGateAccess(id) {
+                fetch(`/api/secure/family-members/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        hasGateAccess: true
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.text().then(text => {
+                            throw new Error(`HTTP error! status: ${response.status}, message: ${text}`);
+                        });
+                    }
+                    location.reload();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Có lỗi xảy ra khi cập nhật thẻ ra vào: ' + error.message);
+                });
+            }
+        </script>
+    </body>
+</html> 

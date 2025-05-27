@@ -4,23 +4,24 @@ import Footer from "./components/layouts/Footer";
 import Home from "./components/pages/Home";
 import { Container } from "react-bootstrap";
 import 'bootstrap/dist/css/bootstrap.min.css';
+import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer } from 'react-toastify';
 import Register from "./components/pages/Register";
 import Login from "./components/pages/Login";
 import { MyDispatchContext, MyUserContext } from "./configs/Contexts";
 import MyUserReducer from "./reducers/MyUserReducer";
 import FirstLogin from "./components/pages/FirstLogin";
-import AdminRegister from "./components/admin/AdminRegister";
 import { useNavigate, useLocation } from "react-router-dom";
-import RequireAdmin from "./components/auth/RequireAdmin";
-import AdminUserList from "./components/admin/AdminUserList";
-import AdminHome from "./components/admin/AdminHome";
 import { useEffect, useReducer, useState, useContext } from "react";
 import cookie from "react-cookies";
 import { authApis, endpoints } from "./configs/Apis";
-import AdminLockerItems from "./components/admin/AdminLockerItems";
 import ResidentLocker from "./components/resident/ResidentLocker";
 import { Chat } from "./components/Chat";
 import RoomSelection from "./components/RoomSelection";
+import ComplaintForm from "./components/ComplaintForm";
+import ComplaintList from "./components/ComplaintList";
+import MyComplaints from "./components/MyComplaints";
+import FamilyMemberList from "./components/FamilyMemberList";
 
 const RequireAuth = ({ children }) => {
   const user = useContext(MyUserContext);
@@ -66,31 +67,6 @@ const App = () => {
           <Container className="flex-grow-1">
             <RequireAuth>
               <Routes>
-                <Route path="/admin/users/edit-user" element={
-                  <RequireAdmin>
-                    <AdminUserList />
-                  </RequireAdmin>
-                } />
-                <Route path="/admin/locker/:userId" element={
-                  <RequireAdmin>
-                    <AdminLockerItems />
-                  </RequireAdmin>
-                } />
-                <Route path="/admin/register" element={
-                  <RequireAdmin>
-                    <AdminRegister />
-                  </RequireAdmin>
-                } />
-                <Route path="/admin/users" element={
-                  <RequireAdmin>
-                    <AdminUserList />
-                  </RequireAdmin>
-                } />
-                <Route path="/admin" element={
-                  <RequireAdmin>
-                    <AdminHome />
-                  </RequireAdmin>
-                } />
                 <Route path="/" element={<Home />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/login" element={<Login />} />
@@ -98,10 +74,36 @@ const App = () => {
                 <Route path="/locker" element={<ResidentLocker />} />
                 <Route path="/chat" element={<RoomSelection />} />
                 <Route path="/chat/:roomId" element={<Chat />} />
+                <Route path="/submit-complaint" element={
+                  <RequireAuth>
+                    <ComplaintForm />
+                  </RequireAuth>
+                } />
+                <Route path="/my-complaints" element={
+                  <RequireAuth>
+                    <MyComplaints />
+                  </RequireAuth>
+                } />
+                <Route path="/family-members" element={
+                  <RequireAuth>
+                    <FamilyMemberList />
+                  </RequireAuth>
+                } />
               </Routes>
             </RequireAuth>
           </Container>
           <Footer />
+          <ToastContainer
+            position="top-right"
+            autoClose={3000}
+            hideProgressBar={false}
+            newestOnTop
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+          />
         </MyDispatchContext.Provider>
       </MyUserContext.Provider>
     </div>
