@@ -109,10 +109,10 @@ public void updateUser(User user) {
                 existingUser.setRole(user.getRole());
 
             // Trường boolean thì kiểm tra với true/false
-            existingUser.setPasswordChanged(user.isPasswordChanged());
-            existingUser.setAvatarUploaded(user.isAvatarUploaded());
-            if (user.isActive() != null)
-                existingUser.setActive(user.isActive());
+            existingUser.setPasswordChanged(user.getPasswordChanged());
+            existingUser.setAvatarUploaded(user.getAvatarUploaded());
+            if (user.getActive()!= null)
+                existingUser.setActive(user.getActive());
 
             session.update(existingUser);
         } else {

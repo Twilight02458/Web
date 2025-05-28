@@ -5,6 +5,7 @@
 package com.ltlt.pojo;
 
 import jakarta.persistence.Basic;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -17,10 +18,13 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  *
@@ -41,24 +45,33 @@ public class Survey implements Serializable {
     @Basic(optional = false)
     @Column(name = "id")
     private Integer id;
-    @Size(max = 255)
+    @Basic(optional = false)
+    @NotNull
+    @Size(min = 1, max = 255)
     @Column(name = "title")
     private String title;
     @Lob
     @Size(max = 65535)
-    @Column(name = "question")
-    private String question;
+    @Column(name = "description")
+    private String description;
     @Column(name = "created_at")
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
     @OneToMany(mappedBy = "surveyId")
-    private Collection<Surveyanswer> surveyanswerCollection;
+    private Collection<SurveyAnswer> surveyAnswerCollection;
+    @OneToMany(mappedBy = "surveyId", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<SurveyQuestion> surveyQuestionCollection= new HashSet<>();;
 
     public Survey() {
     }
 
     public Survey(Integer id) {
         this.id = id;
+    }
+
+    public Survey(Integer id, String title) {
+        this.id = id;
+        this.title = title;
     }
 
     public Integer getId() {
@@ -77,12 +90,12 @@ public class Survey implements Serializable {
         this.title = title;
     }
 
-    public String getQuestion() {
-        return question;
+    public String getDescription() {
+        return description;
     }
 
-    public void setQuestion(String question) {
-        this.question = question;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public Date getCreatedAt() {
@@ -93,13 +106,26 @@ public class Survey implements Serializable {
         this.createdAt = createdAt;
     }
 
-    public Collection<Surveyanswer> getSurveyanswerCollection() {
-        return surveyanswerCollection;
+    public Collection<SurveyAnswer> getSurveyAnswerCollection() {
+        return surveyAnswerCollection;
     }
 
-    public void setSurveyanswerCollection(Collection<Surveyanswer> surveyanswerCollection) {
-        this.surveyanswerCollection = surveyanswerCollection;
+    public void setSurveyAnswerCollection(Collection<SurveyAnswer> surveyAnswerCollection) {
+        this.surveyAnswerCollection = surveyAnswerCollection;
     }
+
+    public Collection<SurveyQuestion> getSurveyQuestionCollection() {
+        return surveyQuestionCollection;
+    }
+
+    public void setSurveyQuestionCollection(Set<SurveyQuestion> surveyQuestionCollection) {
+        this.surveyQuestionCollection = surveyQuestionCollection;
+    }
+    
+    public void addQuestion(SurveyQuestion question) {
+    surveyQuestionCollection.add(question);
+    question.setSurveyId(this);
+}
 
     @Override
     public int hashCode() {

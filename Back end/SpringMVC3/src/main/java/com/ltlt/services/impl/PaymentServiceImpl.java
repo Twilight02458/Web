@@ -3,6 +3,7 @@ package com.ltlt.services.impl;
 import com.ltlt.configs.VnPayConfig;
 import com.ltlt.dto.PaymentItemRequest;
 import com.ltlt.dto.PaymentRequest;
+import com.ltlt.dto.ResidentPaymentRequest;
 import com.ltlt.pojo.Payment;
 import com.ltlt.pojo.PaymentItem;
 import com.ltlt.pojo.User;
@@ -14,9 +15,11 @@ import com.ltlt.services.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -87,5 +90,22 @@ public class PaymentServiceImpl implements PaymentService {
             paymentItemRepository.save(item);
         }
     }
+    
+    @Override
+public List<ResidentPaymentRequest> getApprovedPaymentsForResident(String username) {
+    User user = userRepository.getUserByUsername(username);
+    if (user == null)
+        throw new RuntimeException("User not found");
+
+    List<Payment> payments = paymentRepository.getApprovedPaymentsByUserId(user.getId());
+
+    return payments.stream()
+        .map(payment -> {
+            // Lấy items bằng repository, không dùng collection LAZY
+            List<PaymentItem> items = paymentItemRepository.getItemsByPaymentId(payment.getId());
+            return new ResidentPaymentRequest(payment, items);
+        })
+        .collect(Collectors.toList());
+}
 
 }

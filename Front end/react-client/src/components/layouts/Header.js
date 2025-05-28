@@ -56,6 +56,21 @@ const Header = () => {
               </Nav.Link>
             )}
             {user && user.role === "RESIDENT" && !isLoginPage && (
+              <Nav.Link as={Link} to="/survey" className="px-3 text-light">
+              Khảo sát
+              </Nav.Link>
+            )}
+             {user && user.role === "RESIDENT" && !isLoginPage && (
+              <Nav.Link as={Link} to="/payment" className="px-3 text-light">
+              Thanh toán
+              </Nav.Link>
+            )}
+            {user && user.role === "RESIDENT" && !isLoginPage && (
+              <Nav.Link as={Link} to="/paymentdetail" className="px-3 text-light">
+              Hóa đơn
+              </Nav.Link>
+            )}
+            {user && user.role === "RESIDENT" && !isLoginPage && (
               <Nav.Link as={Link} to="/" className="px-3 text-light">
                 <FaHome className="me-1" />
                 Trang chủ

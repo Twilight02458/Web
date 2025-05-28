@@ -22,8 +22,8 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author aicon
  */
 public class PaymentForResidentServiceImpl implements PaymentForResidentService {
-    
-     @Autowired
+
+    @Autowired
     private UserRepository userRepository;
 
     @Autowired
@@ -31,7 +31,7 @@ public class PaymentForResidentServiceImpl implements PaymentForResidentService 
 
     @Autowired
     private PaymentItemRepository paymentItemRepository;
-    
+
     @Override
     public void createPaymentForResident(AdminCreatePaymentRequest req) {
         User user = userRepository.getUserByUsername(req.getUsername());

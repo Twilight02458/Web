@@ -12,5 +12,5 @@ public interface PaymentRepository {
     Payment findByTransactionCode(String transactionCode);
     List<Payment> getPaymentByUserId(int userId);
     Optional<Payment> findByTransactionCodeAndUserId(String transactionCode, int userId);
-
+    List<Payment> getApprovedPaymentsByUserId(int userId);
 }

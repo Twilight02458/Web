@@ -5,15 +5,26 @@
 package com.ltlt.controllers;
 
 import com.ltlt.dto.PaymentRequest;
+import com.ltlt.dto.SurveyOptionRequest;
+import com.ltlt.dto.SurveyQuestionRequest;
+import com.ltlt.dto.SurveyRequest;
 import com.ltlt.pojo.Locker;
+import com.ltlt.pojo.Survey;
+import com.ltlt.pojo.SurveyOption;
+import com.ltlt.pojo.SurveyQuestion;
 import com.ltlt.pojo.User;
 import com.ltlt.services.LockerService;
 import com.ltlt.services.PaymentService;
+import com.ltlt.services.SurveyService;
 import com.ltlt.services.UserService;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -183,6 +194,69 @@ public class AdminController {
         return "create-payment";
     }
 
+    @Autowired
+    private SurveyService surveyService;
+
+    @GetMapping("/surveys")
+    public String listSurveys(Model model) {
+        List<Survey> surveys = surveyService.getAllSurveys();
+        model.addAttribute("surveys", surveys);
+        return "survey-list";
+    }
+
+    // Form tạo phiếu khảo sát mới
+    @GetMapping("/survey/create")
+    public String createSurveyForm(Model model) {
+        model.addAttribute("survey", new Survey());
+        return "create-survey";
+    }
+
+    @PostMapping("/survey/create")
+public String createSurveySubmit(@ModelAttribute SurveyRequest surveyRequest) {
+    Survey survey = new Survey();
+    survey.setTitle(surveyRequest.getTitle());
+    survey.setDescription(surveyRequest.getDescription());
+    survey.setCreatedAt(new Date());
+
+    System.out.println("Survey title: " + survey.getTitle());
+    System.out.println("Survey description: " + survey.getDescription());
+    System.out.println("Created at: " + survey.getCreatedAt());
+
+    for (SurveyQuestionRequest qDto : surveyRequest.getQuestions()) {
+        SurveyQuestion question = new SurveyQuestion();
+        question.setQuestionText(qDto.getQuestionText());
+
+        System.out.println("  Question: " + question.getQuestionText());
+
+        for (SurveyOptionRequest oDto : qDto.getOptions()) {
+            SurveyOption option = new SurveyOption();
+            option.setOptionText(oDto.getOptionText());
+
+            question.addOption(option); // Thiết lập quan hệ 2 chiều tự động
+
+            System.out.println("    Option: " + option.getOptionText());
+        }
+
+        survey.addQuestion(question); // Thiết lập quan hệ 2 chiều tự động
+    }
+
+    surveyService.createSurvey(survey); // chỉ truyền survey, do cascade
+
+    return "redirect:/admin/survey/create?msg=Thanh Cong";
+}
+
+    @GetMapping("/survey/result/{surveyId}")
+    public String surveyResult(@PathVariable("surveyId") int surveyId, Model model) {
+        // SỬA Ở ĐÂY: Dùng hàm fetch đầy đủ câu hỏi + option
+        Survey survey = surveyService.getSurveyWithResults(surveyId);
+
+        Map<Integer, Map<Integer, Long>> result = surveyService.getSurveyResult(surveyId);
+
+        model.addAttribute("survey", survey);
+        model.addAttribute("result", result);
+        return "survey-result";
+    }
+
 }
 
 //
@@ -211,4 +285,10 @@ public class AdminController {
 //    lockerService.addNewItem(locker);
 //    return "redirect:/admin/users/" + userId + "/locker";
 //}
+//    // Hiển thị danh sách phiếu khảo sát
+//    @GetMapping
+//    public String listSurveys(Model model) {
+//        model.addAttribute("surveys", surveyService.getAllSurveys());
+//        return "admin/survey/list"; // Thymeleaf template
+//    }
 

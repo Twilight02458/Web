@@ -13,5 +13,8 @@
     <class>com.ltlt.pojo.Surveyanswer</class>
     <class>com.ltlt.pojo.User</class>
     <class>com.ltlt.pojo.PaymentItem</class>
+    <class>com.ltlt.pojo.SurveyAnswer</class>
+    <class>com.ltlt.pojo.SurveyQuestion</class>
+    <class>com.ltlt.pojo.SurveyOption</class>
   </persistence-unit>
 </persistence>

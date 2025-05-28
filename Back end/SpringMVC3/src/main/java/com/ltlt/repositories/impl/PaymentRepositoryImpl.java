@@ -67,5 +67,12 @@ public class PaymentRepositoryImpl implements PaymentRepository {
             return Optional.empty();
         }
     }
+    @Override
+    public List<Payment> getApprovedPaymentsByUserId(int userId) {
+        String jpql = "SELECT p FROM Payment p WHERE p.userId.id = :userId AND p.status = 'APPROVED'";
+        return entityManager.createQuery(jpql, Payment.class)
+                 .setParameter("userId", userId)
+                 .getResultList();
+    }
 
 }

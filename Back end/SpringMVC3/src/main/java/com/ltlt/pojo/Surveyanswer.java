@@ -11,24 +11,26 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.Size;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
 import java.io.Serializable;
+import java.util.Date;
 
 /**
  *
  * @author aicon
  */
 @Entity
-@Table(name = "surveyanswer")
+@Table(name = "survey_answer")
 @NamedQueries({
-    @NamedQuery(name = "Surveyanswer.findAll", query = "SELECT s FROM Surveyanswer s"),
-    @NamedQuery(name = "Surveyanswer.findById", query = "SELECT s FROM Surveyanswer s WHERE s.id = :id")})
-public class Surveyanswer implements Serializable {
+    @NamedQuery(name = "SurveyAnswer.findAll", query = "SELECT s FROM SurveyAnswer s"),
+    @NamedQuery(name = "SurveyAnswer.findById", query = "SELECT s FROM SurveyAnswer s WHERE s.id = :id"),
+    @NamedQuery(name = "SurveyAnswer.findByAnsweredAt", query = "SELECT s FROM SurveyAnswer s WHERE s.answeredAt = :answeredAt")})
+public class SurveyAnswer implements Serializable {
 
     private static final long serialVersionUID = 1L;
     @Id
@@ -36,21 +38,26 @@ public class Surveyanswer implements Serializable {
     @Basic(optional = false)
     @Column(name = "id")
     private Integer id;
-    @Lob
-    @Size(max = 65535)
-    @Column(name = "answer")
-    private String answer;
+    @Column(name = "answered_at")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date answeredAt;
     @JoinColumn(name = "survey_id", referencedColumnName = "id")
     @ManyToOne
     private Survey surveyId;
+    @JoinColumn(name = "option_id", referencedColumnName = "id")
+    @ManyToOne
+    private SurveyOption optionId;
+    @JoinColumn(name = "question_id", referencedColumnName = "id")
+    @ManyToOne
+    private SurveyQuestion questionId;
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     @ManyToOne
     private User userId;
 
-    public Surveyanswer() {
+    public SurveyAnswer() {
     }
 
-    public Surveyanswer(Integer id) {
+    public SurveyAnswer(Integer id) {
         this.id = id;
     }
 
@@ -62,12 +69,12 @@ public class Surveyanswer implements Serializable {
         this.id = id;
     }
 
-    public String getAnswer() {
-        return answer;
+    public Date getAnsweredAt() {
+        return answeredAt;
     }
 
-    public void setAnswer(String answer) {
-        this.answer = answer;
+    public void setAnsweredAt(Date answeredAt) {
+        this.answeredAt = answeredAt;
     }
 
     public Survey getSurveyId() {
@@ -76,6 +83,22 @@ public class Surveyanswer implements Serializable {
 
     public void setSurveyId(Survey surveyId) {
         this.surveyId = surveyId;
+    }
+
+    public SurveyOption getOptionId() {
+        return optionId;
+    }
+
+    public void setOptionId(SurveyOption optionId) {
+        this.optionId = optionId;
+    }
+
+    public SurveyQuestion getQuestionId() {
+        return questionId;
+    }
+
+    public void setQuestionId(SurveyQuestion questionId) {
+        this.questionId = questionId;
     }
 
     public User getUserId() {
@@ -96,10 +119,10 @@ public class Surveyanswer implements Serializable {
     @Override
     public boolean equals(Object object) {
         // TODO: Warning - this method won't work in the case the id fields are not set
-        if (!(object instanceof Surveyanswer)) {
+        if (!(object instanceof SurveyAnswer)) {
             return false;
         }
-        Surveyanswer other = (Surveyanswer) object;
+        SurveyAnswer other = (SurveyAnswer) object;
         if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
             return false;
         }
@@ -108,7 +131,7 @@ public class Surveyanswer implements Serializable {
 
     @Override
     public String toString() {
-        return "com.ltlt.pojo.Surveyanswer[ id=" + id + " ]";
+        return "com.ltlt.pojo.SurveyAnswer[ id=" + id + " ]";
     }
     
 }

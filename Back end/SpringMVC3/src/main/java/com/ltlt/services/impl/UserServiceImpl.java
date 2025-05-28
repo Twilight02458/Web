@@ -121,7 +121,7 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("User not found");
         }
 
-        user.setActive(!user.isActive()); // toggle true <-> false
+        user.setActive(!user.getActive()); // toggle true <-> false
         this.userRepo.updateUser(user);
     }
 

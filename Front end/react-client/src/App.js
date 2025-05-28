@@ -9,14 +9,21 @@ import Login from "./components/pages/Login";
 import { MyDispatchContext,MyUserContext } from "./configs/Contexts";
 import MyUserReducer from "./reducers/MyUserReducer";
 import FirstLogin from "./components/pages/FirstLogin";
+import AdminRegister from "./components/admin/AdminRegister";
 import { useNavigate, useLocation } from "react-router-dom";
+import RequireAdmin from "./components/auth/RequireAdmin";
+import AdminUserList from "./components/admin/AdminUserList";
+import AdminHome from "./components/admin/AdminHome";
 import { useEffect, useReducer, useState, useContext,createContext } from "react";
 import cookie from "react-cookies";
 import { authApis, endpoints } from "./configs/Apis";
+import AdminLockerItems from "./components/admin/AdminLockerItems";
 import ResidentLocker from "./components/resident/ResidentLocker";
 import ResidentPayment from "./components/resident/ResidentPayment";
 import ResidentPaymentResult from "./components/resident/ResidentPaymentResult";
-
+import AdminCreatePayment from "./components/admin/AdminCreatePayment";
+import ResidentPaymentDetail from "./components/resident/ResidentPaymentDetail";
+import ResidentSurvey from "./components/resident/ResidentSurvey";
 
 
 const RequireAuth = ({ children }) => {
@@ -64,6 +71,38 @@ const App = () => {
         <Container className="flex-grow-1">
           <RequireAuth>
             <Routes>
+               <Route path="/admin/users/create-payment" element={
+                <RequireAdmin>
+                  <AdminCreatePayment />
+                </RequireAdmin>
+              } />
+              <Route path="/admin/users/edit-user" element={
+                <RequireAdmin>
+                  <AdminUserList />
+                </RequireAdmin>
+              } />
+              <Route path="/admin/locker/:userId" element={
+                <RequireAdmin>
+                  <AdminLockerItems />
+                </RequireAdmin>
+              } />
+              <Route path="/admin/register" element={
+                <RequireAdmin>
+                  <AdminRegister />
+                </RequireAdmin>
+              } />
+              <Route path="/admin/users" element={
+                <RequireAdmin>
+                  <AdminUserList />
+                </RequireAdmin>
+              } />
+              <Route path="/admin" element={
+                <RequireAdmin>
+                  <AdminHome />
+                </RequireAdmin>
+              } />
+              <Route path="/survey" element={<ResidentSurvey />} />
+               <Route path="/paymentdetail" element={<ResidentPaymentDetail />} />
               <Route path="/payment" element={<ResidentPayment />} />
               <Route path="/payment/result" element={<ResidentPaymentResult />} />
               <Route path="/" element={<Home />} />
