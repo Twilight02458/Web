@@ -54,7 +54,7 @@ public class SurveyServiceImpl implements SurveyService {
     @Override
     @Transactional
     public void createSurvey(Survey survey) {
-        surveyRepo.addSurvey(survey);  
+        surveyRepo.addSurvey(survey);
     }
 
     @Autowired
@@ -68,7 +68,6 @@ public class SurveyServiceImpl implements SurveyService {
         }
         return null;
     }
-
 
     @Override
     public SurveyRequest convertToRequest(Survey survey) {
@@ -127,7 +126,7 @@ public class SurveyServiceImpl implements SurveyService {
     }
     @Autowired
     private LocalSessionFactoryBean sessionFactory;
-    
+
     @Override
     public Map<Integer, Map<Integer, Long>> getSurveyResult(int surveyId) {
         List<Object[]> raw = surveyAnswerRepo.countAnswersByQuestionAndOption(surveyId);
@@ -140,10 +139,19 @@ public class SurveyServiceImpl implements SurveyService {
         }
         return result;
     }
-    
 
     @Override
     public Survey getSurveyWithResults(int surveyId) {
         return surveyRepo.getSurveyWithResults(surveyId);
     }
+
+    @Override
+    @Transactional
+    public void deleteSurvey(int id) {
+        Survey survey = surveyRepo.getSurveyById(id);
+        if (survey != null) {
+            surveyRepo.deleteSurvey(survey);
+        }
+    }
+
 }

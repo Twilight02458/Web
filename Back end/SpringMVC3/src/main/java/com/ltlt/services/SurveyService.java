@@ -27,4 +27,6 @@ public interface SurveyService {
     void deleteAnswersIfNotSubmitted(int userId, int surveyId); 
     Map<Integer, Map<Integer, Long>> getSurveyResult(int surveyId);
 Survey getSurveyWithResults(int surveyId);
+void deleteSurvey(int id);
+
 }

@@ -5,12 +5,15 @@
 package com.ltlt.repositories.impl;
 
 import com.ltlt.pojo.Payment;
+import com.ltlt.pojo.PaymentProve;
 import com.ltlt.repositories.PaymentRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -19,11 +22,19 @@ public class PaymentRepositoryImpl implements PaymentRepository {
 
     @PersistenceContext
     private EntityManager entityManager;
+    
+    @Autowired
+    private SessionFactory sessionFactory;
 
-    @Override
-    public void save(Payment payment) {
+   @Override
+public void save(Payment payment) {
+    if (payment.getId() == null) {
         entityManager.persist(payment);
+    } else {
+        entityManager.merge(payment);
     }
+}
+
 
     @Override
     public void updateStatus(String transactionCode, String status) {
@@ -53,6 +64,14 @@ public class PaymentRepositoryImpl implements PaymentRepository {
                 .setParameter("userId", userId)
                 .getResultList();
     }
+    @Override
+public List<Payment> getAllPaymentByUserId(int userId) {
+    return entityManager.createQuery(
+            "SELECT p FROM Payment p WHERE p.userId.id = :userId ORDER BY p.paymentDate DESC", Payment.class)
+            .setParameter("userId", userId)
+            .getResultList();
+}
+
 
     @Override
     public Optional<Payment> findByTransactionCodeAndUserId(String transactionCode, int userId) {
@@ -73,6 +92,20 @@ public class PaymentRepositoryImpl implements PaymentRepository {
         return entityManager.createQuery(jpql, Payment.class)
                  .setParameter("userId", userId)
                  .getResultList();
+    }
+    
+  @Override
+public void save(PaymentProve prove) {
+    if (prove.getId() == null) {
+        entityManager.persist(prove);
+    } else {
+        entityManager.merge(prove);
+    }
+}
+
+      @Override
+    public Payment findById(int id) {
+        return sessionFactory.getCurrentSession().get(Payment.class, id);
     }
 
 }

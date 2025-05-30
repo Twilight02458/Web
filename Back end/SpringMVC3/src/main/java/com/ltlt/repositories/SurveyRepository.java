@@ -13,10 +13,17 @@ import java.util.List;
  * @author aicon
  */
 public interface SurveyRepository {
+
     List<Survey> getAllSurveys();
+
     Survey getSurveyById(int id);
+
     void addSurvey(Survey survey);
+
     Survey getLatestSurvey();
+
     Survey getSurveyWithResults(int surveyId);
+
+    void deleteSurvey(Survey survey);
 
 }

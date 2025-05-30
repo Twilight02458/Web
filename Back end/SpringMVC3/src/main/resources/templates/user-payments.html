@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Chi tiết hóa đơn của cư dân</title>
+
+    <!-- Thay thế block bootstrap -->
+    <th:block th:replace="base :: bootstrap"></th:block>
+</head>
+<body>
+    <!-- Header -->
+    <div th:replace="base :: header"></div>
+
+    <!-- Main Content -->
+    <main class="container mt-4">
+        <h3 th:text="'Chi tiết hóa đơn của cư dân: ' + ${user.lastName} + ' ' + ${user.firstName}"></h3>
+
+        <div th:if="${payments.isEmpty()}" class="alert alert-info mt-3">
+            Cư dân này không có hóa đơn nào.
+        </div>
+
+        <div th:each="p, iterStat : ${payments}" class="card mt-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>
+                    <strong>Phiếu #</strong><span th:text="${iterStat.index + 1}"></span> |
+                    <strong>Mã giao dịch:</strong> <span th:text="${p.transactionCode}"></span> |
+                    <strong>Trạng thái:</strong>
+                    <span th:if="${p.status == 'PENDING'}" class="text-warning fw-bold">Chờ thanh toán</span>
+                    <span th:if="${p.status == 'APPROVED'}" class="text-success fw-bold">Đã thanh toán</span>
+                </span>
+                <span><strong>Ngày tạo:</strong> <span th:text="${#dates.format(p.paymentDate, 'dd/MM/yyyy HH:mm')}"></span></span>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-bordered mb-0">
+                    <thead>
+                        <tr class="table-light">
+                            <th>STT</th>
+                            <th>Loại phí</th>
+                            <th>Số tiền (VNĐ)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="item, idx : ${p.items}">
+                            <td th:text="${idx.index + 1}"></td>
+                            <td th:text="${item.feeType}"></td>
+                            <td th:text="${#numbers.formatDecimal(item.amount, 0, 'COMMA', 0, 'POINT')}"></td>
+                        </tr>
+                        <tr class="fw-bold">
+                            <td colspan="2">Tổng cộng</td>
+                            <td th:text="${#numbers.formatDecimal(p.totalAmount, 0, 'COMMA', 0, 'POINT')}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <div th:replace="base :: footer"></div>
+</body>
+</html>

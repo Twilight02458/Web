@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+    <head>
+        <meta charset="UTF-8">
+        <title>Trạng thái thanh toán người dùng</title>
+
+        <!-- Thay thế block bootstrap -->
+    <th:block th:replace="base :: bootstrap"></th:block>
+</head>
+<body>
+    <!-- Header -->
+    <div th:replace="base :: header"></div>
+
+    <!-- Main Content -->
+    <main class="container mt-4">
+        <h3 class="mb-4">Trạng thái thanh toán của cư dân</h3>
+
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>STT</th>
+                    <th>Họ tên</th>
+                    <th>Tên đăng nhập</th>
+                    <th>Trạng thái thanh toán</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="u, iterStat : ${paymentStatuses}">
+                    <td th:text="${iterStat.index + 1}"></td>
+                    <td th:text="${u.fullName}"></td>
+                    <td th:text="${u.username}"></td>
+                    <td>
+                        <span th:if="${u.status == 'Đã thanh toán'}" class="text-success fw-bold" th:text="${u.status}"></span>
+                        <span th:if="${u.status == 'Chờ thanh toán'}" class="text-warning fw-bold" th:text="${u.status}"></span>
+                    </td>
+                    <td>
+                        <a th:href="@{'/admin/user/' + ${u.userId} + '/payments'}" class="btn btn-primary btn-sm">
+                            Xem chi tiết
+                        </a>
+                        <a th:if="${u.hasPendingProve}" 
+                           th:href="@{'/admin/user/' + ${u.userId} + '/payment-proves/pending'}"
+                           class="btn btn-warning btn-sm ms-1">
+                            Xử lý
+                        </a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </main>
+
+    <!-- Footer -->
+    <div th:replace="base :: footer"></div>
+</body>
+</html>

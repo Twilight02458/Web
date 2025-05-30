@@ -25,6 +25,8 @@ export const endpoints = {
     'user-paymentdetail': "user/paymentdetail",
     "user-survey": "/user/survey",
     "user-survey-submit": "/user/survey/submit",
+    'user-payment-proof': '/user/payment-proof',
+    'user-feedback': '/user/feedback',
 }
 export const authApis = () => {
     return axios.create({

@@ -67,14 +67,22 @@
                             </button>
                         </form>
 
-                        <a th:href="@{/admin/locker(userId=${u.id})}" class="btn btn-sm btn-info">Tủ đồ</a>
+
+                        <a th:href="@{/admin/locker(userId=${u.id})}" class="btn btn-sm btn-info">Tủ đồ</a>                   
+
                     </td>
                     <td>                      
                         <a th:href="@{/admin/users/{username}/create-payment(username=${u.username})}" 
                            class="btn btn-sm btn-success">
                             Xuất phiếu
                         </a>
+
+                        <a th:href="@{/admin/users/{userId}/full-payments(userId=${u.id})}" class="btn btn-sm btn-primary">
+                            Xem hóa đơn
+                        </a>
                     </td>
+
+
 
                 </tr>
             </tbody>

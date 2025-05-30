@@ -26,10 +26,17 @@
                 <tr th:each="s, stat : ${surveys}">
                     <td th:text="${stat.index + 1}">1</td>
                     <td th:text="${s.title}">Tiêu đề</td>
-                    <td th:text="${#dates.format(s.createdAt, 'dd/MM/yyyy HH:mm')}">dd/MM/yyyy</td>
+                    <td th:text="${#dates.format(s.createdAt, 'dd/MM/yyyy HH:mm')}">dd/MM/yyyy</td>                
                     <td>
                         <a th:href="@{/admin/survey/result/{surveyId}(surveyId=${s.id})}" class="btn btn-info btn-sm">Xem kết quả</a>
+
+                        <form th:action="@{/admin/survey/delete/{id}(id=${s.id})}" method="post" style="display:inline"
+                              onsubmit="return confirm('Bạn có chắc chắn muốn xóa khảo sát này?');">
+                            <input type="hidden" name="_method" value="delete" />
+                            <button type="submit" class="btn btn-danger btn-sm ms-2">🗑️ Xóa</button>
+                        </form>
                     </td>
+
                 </tr>
             </tbody>
         </table>

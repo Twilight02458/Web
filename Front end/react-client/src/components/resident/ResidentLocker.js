@@ -1,7 +1,7 @@
 import { useEffect, useState, useContext } from "react";
 import { authApis, endpoints } from "../../configs/Apis";
 import { Table, Alert } from "react-bootstrap";
-import { MyUserContext } from "../../configs/Contexts"; 
+import { MyUserContext } from "../../configs/Contexts";
 
 const ResidentLocker = () => {
     const user = useContext(MyUserContext);
@@ -25,34 +25,38 @@ const ResidentLocker = () => {
 
     return (
         <div className="container mt-4">
-            <h3>Tủ đồ của bạn</h3>
+            <h2>Tủ đồ của bạn</h2>
             {msg && <Alert variant="danger">{msg}</Alert>}
-            <Table bordered hover>
-                <thead>
-                    <tr>
-                        <th>STT</th>
-                        <th>Tên món hàng</th>
-                        <th>Ngày nhận</th>
-                        <th>Trạng thái</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {items.map((item, idx) => (
-                        <tr key={item.id}>
-                            <td>{idx + 1}</td>
-                            <td>{item.itemName}</td>
-                            <td>
-                                {item.receivedAt
-                                    ? new Date(item.receivedAt).toLocaleString()
-                                    : ""}
-                            </td>
-                            <td>
-                                {item.status === "RECEIVED" ? "Đã nhận" : "Chờ nhận"}
-                            </td>
+            {items.length === 0 ? (
+                <Alert variant="info">Không có đồ nào được gửi đến tủ của bạn.</Alert>
+            ) : (
+                <Table bordered hover>
+                    <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>Tên món hàng</th>
+                            <th>Ngày nhận</th>
+                            <th>Trạng thái</th>
                         </tr>
-                    ))}
-                </tbody>
-            </Table>
+                    </thead>
+                    <tbody>
+                        {items.map((item, idx) => (
+                            <tr key={item.id}>
+                                <td>{idx + 1}</td>
+                                <td>{item.itemName}</td>
+                                <td>
+                                    {item.receivedAt
+                                        ? new Date(item.receivedAt).toLocaleString()
+                                        : ""}
+                                </td>
+                                <td>
+                                    {item.status === "RECEIVED" ? "Đã nhận" : "Chờ nhận"}
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </Table>
+            )}
         </div>
     );
 };

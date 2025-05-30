@@ -4,15 +4,25 @@
  */
 package com.ltlt.controllers;
 
+import com.ltlt.dto.PaymentProveRequest;
 import com.ltlt.dto.PaymentRequest;
+import com.ltlt.dto.ResidentPaymentRequest;
 import com.ltlt.dto.SurveyOptionRequest;
 import com.ltlt.dto.SurveyQuestionRequest;
 import com.ltlt.dto.SurveyRequest;
+import com.ltlt.dto.UserPaymentStatusResponse;
+import com.ltlt.pojo.Feedback;
 import com.ltlt.pojo.Locker;
+import com.ltlt.pojo.Payment;
 import com.ltlt.pojo.Survey;
 import com.ltlt.pojo.SurveyOption;
 import com.ltlt.pojo.SurveyQuestion;
 import com.ltlt.pojo.User;
+import com.ltlt.repositories.PaymentItemRepository;
+import com.ltlt.repositories.PaymentProveRepository;
+import com.ltlt.repositories.PaymentRepository;
+import com.ltlt.repositories.UserRepository;
+import com.ltlt.services.FeedbackService;
 import com.ltlt.services.LockerService;
 import com.ltlt.services.PaymentService;
 import com.ltlt.services.SurveyService;
@@ -24,7 +34,9 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -47,6 +59,12 @@ public class AdminController {
 
     @Autowired
     private UserService userService;
+      @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private PaymentRepository paymentRepository;
+    @Autowired
+    private PaymentProveRepository paymentProveRepository;
 
     @GetMapping("/users")
     public String listUsers(Model model,
@@ -165,6 +183,9 @@ public class AdminController {
 
     @Autowired
     private PaymentService paymentService;
+    
+    @Autowired
+    private PaymentItemRepository paymentItemRepository;
 
     @PostMapping("users/{username}/create-payment")
     public String createPaymentForUser(
@@ -193,6 +214,85 @@ public class AdminController {
         model.addAttribute("transactionCode", String.valueOf(System.currentTimeMillis()));
         return "create-payment";
     }
+    
+     @GetMapping("/user/payment-status")
+    public String getUserPaymentStatuses(Model model) {
+        List<User> users = userRepository.getAllUsers();
+
+        List<UserPaymentStatusResponse> paymentStatuses = users.stream()
+                .map(user -> {
+                    List<Payment> payments = paymentRepository.getPaymentByUserId(user.getId());
+                    if (payments.isEmpty()) {
+                        return null;
+                    }
+
+                    // Kiểm tra xem có chứng từ đang chờ xử lý không
+                    boolean hasPendingProve = !paymentProveRepository.getPendingProvesByUserId(user.getId()).isEmpty();
+
+                    return new UserPaymentStatusResponse(user, payments, hasPendingProve);
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        model.addAttribute("paymentStatuses", paymentStatuses);
+        return "payment-status";
+    }
+
+    
+
+    @GetMapping("/user/{userId}/payments")
+    public String getUserPayments(@PathVariable("userId") int userId, Model model) {
+        User user = userRepository.getUserById(userId);
+        if (user == null) {
+            return "redirect:/user/payment-status";
+        }
+
+        List<Payment> payments = paymentRepository.getPaymentByUserId(userId);
+
+        List<ResidentPaymentRequest> paymentDetails = payments.stream()
+                .map(p -> new ResidentPaymentRequest(p, paymentItemRepository.getItemsByPaymentId(p.getId())))
+                .collect(Collectors.toList());
+
+        model.addAttribute("user", user);
+        model.addAttribute("payments", paymentDetails);
+        return "user-payments";
+    }
+
+    @GetMapping("/user/{userId}/payment-proves/pending")
+    public String showPendingPaymentProve(@PathVariable("userId") int userId, Model model) {
+        PaymentProveRequest prove = paymentService.getPendingProveByUserId(userId);
+        if (prove == null) {
+            return "redirect:/admin/user-status"; // Trở lại nếu không có chứng từ nào
+        }
+        model.addAttribute("prove", prove);
+        return "payment-prove-process";
+    }
+
+    @PostMapping("/payment-proves/{id}/approve")
+    public String approvePaymentProve(@PathVariable("id") int id) {
+        paymentService.approvePaymentProve(id);
+        return "redirect:/admin/user/payment-status";
+    }
+    
+    @GetMapping("/users/{userId}/full-payments")
+public String viewUserPayments(@PathVariable("userId") Integer userId, Model model) {
+    User user = userRepository.getUserById(userId);
+        if (user == null) {
+            return "redirect:/user/payment-status";
+        }
+
+        List<Payment> payments = paymentRepository.getAllPaymentByUserId(userId);
+
+        List<ResidentPaymentRequest> paymentDetails = payments.stream()
+                .map(p -> new ResidentPaymentRequest(p, paymentItemRepository.getItemsByPaymentId(p.getId())))
+                .collect(Collectors.toList());
+
+        model.addAttribute("user", user);
+        model.addAttribute("payments", paymentDetails);
+
+    return "user-payments"; // View Thymeleaf hiển thị danh sách hóa đơn thanh toán
+}
+
 
     @Autowired
     private SurveyService surveyService;
@@ -212,50 +312,73 @@ public class AdminController {
     }
 
     @PostMapping("/survey/create")
-public String createSurveySubmit(@ModelAttribute SurveyRequest surveyRequest) {
-    Survey survey = new Survey();
-    survey.setTitle(surveyRequest.getTitle());
-    survey.setDescription(surveyRequest.getDescription());
-    survey.setCreatedAt(new Date());
+    public String createSurveySubmit(@ModelAttribute SurveyRequest surveyRequest) {
+        Survey survey = new Survey();
+        survey.setTitle(surveyRequest.getTitle());
+        survey.setDescription(surveyRequest.getDescription());
+        survey.setCreatedAt(new Date());
 
-    System.out.println("Survey title: " + survey.getTitle());
-    System.out.println("Survey description: " + survey.getDescription());
-    System.out.println("Created at: " + survey.getCreatedAt());
+        System.out.println("Survey title: " + survey.getTitle());
+        System.out.println("Survey description: " + survey.getDescription());
+        System.out.println("Created at: " + survey.getCreatedAt());
 
-    for (SurveyQuestionRequest qDto : surveyRequest.getQuestions()) {
-        SurveyQuestion question = new SurveyQuestion();
-        question.setQuestionText(qDto.getQuestionText());
+        for (SurveyQuestionRequest qDto : surveyRequest.getQuestions()) {
+            SurveyQuestion question = new SurveyQuestion();
+            question.setQuestionText(qDto.getQuestionText());
 
-        System.out.println("  Question: " + question.getQuestionText());
+            System.out.println("  Question: " + question.getQuestionText());
 
-        for (SurveyOptionRequest oDto : qDto.getOptions()) {
-            SurveyOption option = new SurveyOption();
-            option.setOptionText(oDto.getOptionText());
+            for (SurveyOptionRequest oDto : qDto.getOptions()) {
+                SurveyOption option = new SurveyOption();
+                option.setOptionText(oDto.getOptionText());
 
-            question.addOption(option); // Thiết lập quan hệ 2 chiều tự động
+                question.addOption(option); // Thiết lập quan hệ 2 chiều tự động
 
-            System.out.println("    Option: " + option.getOptionText());
+                System.out.println("    Option: " + option.getOptionText());
+            }
+
+            survey.addQuestion(question); // Thiết lập quan hệ 2 chiều tự động
         }
 
-        survey.addQuestion(question); // Thiết lập quan hệ 2 chiều tự động
+        surveyService.createSurvey(survey); // chỉ truyền survey, do cascade
+
+        return "redirect:/admin/survey/create?msg=Thanh Cong";
     }
-
-    surveyService.createSurvey(survey); // chỉ truyền survey, do cascade
-
-    return "redirect:/admin/survey/create?msg=Thanh Cong";
-}
 
     @GetMapping("/survey/result/{surveyId}")
     public String surveyResult(@PathVariable("surveyId") int surveyId, Model model) {
-        // SỬA Ở ĐÂY: Dùng hàm fetch đầy đủ câu hỏi + option
-        Survey survey = surveyService.getSurveyWithResults(surveyId);
-
+        Survey survey = surveyService.getSurveyWithResults(surveyId); // đã chạy ổn
         Map<Integer, Map<Integer, Long>> result = surveyService.getSurveyResult(surveyId);
-
         model.addAttribute("survey", survey);
         model.addAttribute("result", result);
         return "survey-result";
     }
+
+    @PostMapping("/survey/delete/{id}")
+    public String deleteSurvey(@PathVariable("id") int id) {
+        surveyService.deleteSurvey(id);
+        return "redirect:/admin/surveys";
+    }
+
+    
+    @Autowired
+    private FeedbackService feedbackService;
+
+    @GetMapping("/feedback")
+    public String viewFeedbackList(Model model) {
+        List<Feedback> feedbacks = feedbackService.getAll();
+        model.addAttribute("feedbacks", feedbacks);
+        return "feedback-list";
+    }
+
+    @PostMapping("/feedback/delete/{id}")
+    public String deleteFeedback(@PathVariable("id") int id, RedirectAttributes redirectAttributes) {
+        feedbackService.deleteById(id);
+        redirectAttributes.addFlashAttribute("msg", "Phản ánh đã được xóa.");
+        return "redirect:/admin/feedback";
+    }
+
+   
 
 }
 

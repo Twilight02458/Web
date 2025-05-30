@@ -4,20 +4,26 @@
  */
 package com.ltlt.controllers;
 
+import com.ltlt.dto.FeedbackRequest;
+import com.ltlt.dto.PaymentProveRequest;
 import com.ltlt.dto.ResidentPaymentRequest;
 import com.ltlt.dto.SurveyAnswerRequest;
 import com.ltlt.dto.SurveyRequest;
+import com.ltlt.pojo.Feedback;
 import com.ltlt.pojo.Locker;
 import com.ltlt.pojo.Payment;
 import com.ltlt.pojo.PaymentItem;
+import com.ltlt.pojo.PaymentProve;
 import com.ltlt.pojo.Survey;
 import com.ltlt.pojo.SurveyAnswer;
 import com.ltlt.pojo.SurveyOption;
 import com.ltlt.pojo.SurveyQuestion;
 import com.ltlt.pojo.User;
+import com.ltlt.repositories.FeedbackRepository;
 import com.ltlt.repositories.PaymentItemRepository;
 import com.ltlt.repositories.PaymentRepository;
 import com.ltlt.repositories.UserRepository;
+import com.ltlt.services.FeedbackService;
 import com.ltlt.services.LockerService;
 import com.ltlt.services.PaymentService;
 import com.ltlt.services.SurveyService;
@@ -39,8 +45,10 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -247,6 +255,60 @@ public class ApiUserController {
 
         surveyService.saveSurveyAnswers(entities);
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/user/payment-proof")
+    public ResponseEntity<?> uploadProof(
+            @RequestParam("paymentId") int paymentId,
+            @RequestParam("transactionCode") String transactionCode,
+            @RequestParam("file") MultipartFile file,
+            Principal principal) {
+        try {
+            PaymentProve prove = paymentService.savePaymentProof(paymentId, transactionCode, file, principal.getName());
+            PaymentProveRequest dto = new PaymentProveRequest(prove);
+
+            return ResponseEntity.ok(dto);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Tải lên thất bại: " + e.getMessage()));
+        }
+    }
+
+    @Autowired
+    private FeedbackService feedbackService;
+
+    @Autowired
+    private FeedbackRepository feedbackRepository;
+
+    @PostMapping("/user/feedback")
+    @ResponseBody
+    public ResponseEntity<?> saveFeedback(@RequestBody FeedbackRequest request, Principal principal) {
+        try {
+            if (principal == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("message", "Bạn cần đăng nhập"));
+            }
+
+            User user = userDetailsService.getUserByUsername(principal.getName());
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("message", "Không tìm thấy user"));
+            }
+
+            Feedback feedback = new Feedback();
+            feedback.setTitle(request.getTitle());
+            feedback.setContent(request.getContent());
+            feedback.setCreatedAt(new Date());
+            feedback.setUserId(user);
+
+            feedbackRepository.save(feedback);
+
+            return ResponseEntity.ok(Map.of("message", "Phản ánh đã được gửi thành công"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Lỗi khi gửi phản ánh"));
+        }
     }
 
 }

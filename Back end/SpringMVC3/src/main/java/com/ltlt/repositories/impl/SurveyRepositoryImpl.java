@@ -54,20 +54,26 @@ public class SurveyRepositoryImpl implements SurveyRepository {
                 .setMaxResults(1)
                 .uniqueResult();
     }
-    
+
     // SurveyRepositoryImpl.java (hoặc service)
-@Override
-public Survey getSurveyWithResults(int surveyId) {
-    Session session = sessionFactory.getCurrentSession();
-    Query<Survey> q = session.createQuery(
-        "SELECT s FROM Survey s " +
-        "JOIN FETCH s.surveyQuestionCollection q " +
-        "JOIN FETCH q.surveyOptionCollection " +
-        "WHERE s.id = :id", 
-        Survey.class
-    );
-    q.setParameter("id", surveyId);
-    return q.getSingleResult();
-}
+    @Override
+    public Survey getSurveyWithResults(int surveyId) {
+        Session session = sessionFactory.getCurrentSession();
+        Query<Survey> q = session.createQuery(
+                "SELECT s FROM Survey s "
+                + "JOIN FETCH s.surveyQuestionCollection q "
+                + "JOIN FETCH q.surveyOptionCollection "
+                + "WHERE s.id = :id",
+                Survey.class
+        );
+        q.setParameter("id", surveyId);
+        return q.getSingleResult();
+    }
+
+    @Override
+    public void deleteSurvey(Survey survey) {
+        Session session = sessionFactory.getCurrentSession();
+        session.delete(survey);
+    }
 
 }

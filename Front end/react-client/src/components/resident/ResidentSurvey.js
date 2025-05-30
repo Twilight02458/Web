@@ -50,11 +50,15 @@ const ResidentSurvey = () => {
     }
 
     if (!survey) {
-        return <Alert variant="info">Không có khảo sát nào hiện tại.</Alert>;
+        return (<div className="container mt-4">
+            <h2 >Khảo sát cần thực hiện</h2>
+            <Alert variant="info">Không có khảo sát nào hiện tại.</Alert>
+        </div>)
     }
 
     return (
         <div className="container mt-4">
+
             <h3>{survey.title}</h3>
             {msg && <Alert variant="danger">{msg}</Alert>}
             <form onSubmit={handleSubmit}>

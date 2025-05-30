@@ -42,12 +42,6 @@ import java.util.Date;
     @NamedQuery(name = "Payment.findByTransactionCode", query = "SELECT p FROM Payment p WHERE p.transactionCode = :transactionCode")})
 public class Payment implements Serializable {
 
-    private static final long serialVersionUID = 1L;
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Basic(optional = false)
-    @Column(name = "id")
-    private Integer id;
     // @Max(value=?)  @Min(value=?)//if you know range of your decimal fields consider using these annotations to enforce field validation
     @Basic(optional = false)
     @NotNull
@@ -59,12 +53,21 @@ public class Payment implements Serializable {
     @Size(max = 20)
     @Column(name = "method")
     private String method;
-    @Column(name = "payment_date")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date paymentDate;
     @Size(max = 100)
     @Column(name = "transaction_code")
     private String transactionCode;
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "paymentId")
+    private Collection<PaymentProve> paymentProveCollection;
+
+    private static final long serialVersionUID = 1L;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Basic(optional = false)
+    @Column(name = "id")
+    private Integer id;
+    @Column(name = "payment_date")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date paymentDate;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "paymentId")
     private Collection<PaymentItem> paymentItemCollection;
     @JoinColumn(name = "user_id", referencedColumnName = "id")
@@ -99,21 +102,6 @@ public class Payment implements Serializable {
         this.totalAmount = totalAmount;
     }
 
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public String getMethod() {
-        return method;
-    }
-
-    public void setMethod(String method) {
-        this.method = method;
-    }
 
     public Date getPaymentDate() {
         return paymentDate;
@@ -170,6 +158,31 @@ public class Payment implements Serializable {
     @Override
     public String toString() {
         return "com.ltlt.pojo.Payment[ id=" + id + " ]";
+    }
+
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getMethod() {
+        return method;
+    }
+
+    public void setMethod(String method) {
+        this.method = method;
+    }
+
+    public Collection<PaymentProve> getPaymentProveCollection() {
+        return paymentProveCollection;
+    }
+
+    public void setPaymentProveCollection(Collection<PaymentProve> paymentProveCollection) {
+        this.paymentProveCollection = paymentProveCollection;
     }
     
 }

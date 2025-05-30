@@ -37,7 +37,7 @@ const ResidentPaymentDetail = () => {
 
     return (
         <div className="container mt-4">
-            <h3>Đơn thanh toán đã hoàn thành</h3>
+            <h2>Đơn thanh toán đã hoàn thành</h2>
             {msg && <Alert variant="danger">{msg}</Alert>}
 
             {payments.length === 0 ? (
