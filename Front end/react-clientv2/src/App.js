@@ -24,6 +24,7 @@ import ResidentSurvey from "./components/resident/ResidentSurvey";
 import FeedbackForm from "./components/resident/FeedbackForm";
 import ResidentPayment from "./components/resident/ResidentPayment";
 import ResidentPaymentDetail from "./components/resident/ResidentPaymentDetail";
+import ResidentPaymentResult from "./components/resident/ResidentPaymentResult";
 
 const RequireAuth = ({ children }) => {
   const user = useContext(MyUserContext);
@@ -84,7 +85,8 @@ const App = () => {
                 <Route path="/survey" element={<ResidentSurvey />} />
                 <Route path="/feedback" element={<FeedbackForm />} />
                 <Route path="/payment" element={<ResidentPayment />} />
-                <Route path="/payment-detail" element={<ResidentPaymentDetail />} />
+                <Route path="/paymentdetail" element={<ResidentPaymentDetail />} />
+                <Route path="/payment/result" element={<ResidentPaymentResult />} />
               </Routes>
             </RequireAuth>
           </Container>
