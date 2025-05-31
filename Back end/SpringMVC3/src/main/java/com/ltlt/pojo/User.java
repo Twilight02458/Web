@@ -6,6 +6,7 @@ package com.ltlt.pojo;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Basic;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -37,7 +38,9 @@ import java.util.Collection;
     @NamedQuery(name = "User.findByPassword", query = "SELECT u FROM User u WHERE u.password = :password"),
     @NamedQuery(name = "User.findByAvatar", query = "SELECT u FROM User u WHERE u.avatar = :avatar"),
     @NamedQuery(name = "User.findByRole", query = "SELECT u FROM User u WHERE u.role = :role"),
-    @NamedQuery(name = "User.findByActive", query = "SELECT u FROM User u WHERE u.active = :active")})
+    @NamedQuery(name = "User.findByActive", query = "SELECT u FROM User u WHERE u.active = :active"),
+    @NamedQuery(name = "User.findByPasswordChanged", query = "SELECT u FROM User u WHERE u.passwordChanged = :passwordChanged"),
+    @NamedQuery(name = "User.findByAvatarUploaded", query = "SELECT u FROM User u WHERE u.avatarUploaded = :avatarUploaded")})
 public class User implements Serializable {
 
     @Size(max = 100)
@@ -48,13 +51,9 @@ public class User implements Serializable {
     private String lastName;
     // @Pattern(regexp="[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?", message="Invalid email")//if the field contains email address consider using this annotation to enforce field validation
     // @Pattern(regexp="[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?", message="Invalid email")//if the field contains email address consider using this annotation to enforce field validation
-    // @Pattern(regexp="[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?", message="Invalid email")//if the field contains email address consider using this annotation to enforce field validation
-    // @Pattern(regexp="[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?", message="Invalid email")//if the field contains email address consider using this annotation to enforce field validation
     @Size(max = 100)
     @Column(name = "email")
     private String email;
-    // @Pattern(regexp="^\\(?(\\d{3})\\)?[- ]?(\\d{3})[- ]?(\\d{4})$", message="Invalid phone/fax format, should be as xxx-xxx-xxxx")//if the field contains phone or fax number consider using this annotation to enforce field validation
-    // @Pattern(regexp="^\\(?(\\d{3})\\)?[- ]?(\\d{3})[- ]?(\\d{4})$", message="Invalid phone/fax format, should be as xxx-xxx-xxxx")//if the field contains phone or fax number consider using this annotation to enforce field validation
     // @Pattern(regexp="^\\(?(\\d{3})\\)?[- ]?(\\d{3})[- ]?(\\d{4})$", message="Invalid phone/fax format, should be as xxx-xxx-xxxx")//if the field contains phone or fax number consider using this annotation to enforce field validation
     // @Pattern(regexp="^\\(?(\\d{3})\\)?[- ]?(\\d{3})[- ]?(\\d{4})$", message="Invalid phone/fax format, should be as xxx-xxx-xxxx")//if the field contains phone or fax number consider using this annotation to enforce field validation
     @Size(max = 15)
@@ -78,42 +77,31 @@ public class User implements Serializable {
     @Size(min = 1, max = 8)
     @Column(name = "role")
     private String role;
+    @Basic(optional = false)
+    @NotNull()
+    @Column(name = "password_changed")
+    private boolean passwordChanged;
+    @Basic(optional = false)
+    @NotNull
+    @Column(name = "avatar_uploaded")
+    private boolean avatarUploaded;
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "userId")
+    @JsonIgnore
+    private Collection<Feedback> feedbackCollection;
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "userId")
+    @JsonIgnore
+    private Collection<Payment> paymentCollection;
     private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Basic(optional = false)
     @Column(name = "id")
     private Integer id;
-    @Column(name = "password_changed", nullable = false)
-    private boolean passwordChanged = false;
-    @Column(name = "avatar_uploaded", nullable = false)
-    private boolean avatarUploaded = false;
     @Column(name = "active")
     private Boolean active;
     @OneToMany(mappedBy = "userId")
     @JsonIgnore
-    private Collection<Feedback> feedbackCollection;
-    @OneToMany(mappedBy = "senderId")
-    @JsonIgnore
-    private Collection<Chatmessage> chatmessageCollection;
-    @OneToMany(mappedBy = "receiverId")
-    @JsonIgnore
-    private Collection<Chatmessage> chatmessageCollection1;
-    @OneToMany(mappedBy = "userId")
-    @JsonIgnore
-    private Collection<Payment> paymentCollection;
-    @OneToMany(mappedBy = "userId")
-    @JsonIgnore
-    private Collection<Visitorcard> visitorcardCollection;
-    @OneToMany(mappedBy = "userId")
-    @JsonIgnore
-    private Collection<Invoice> invoiceCollection;
-    @OneToMany(mappedBy = "userId")
-    @JsonIgnore
-    private Collection<Surveyanswer> surveyanswerCollection;
-    @OneToMany(mappedBy = "userId")
-    @JsonIgnore
-    private Collection<Locker> lockerCollection;
+    private Collection<SurveyAnswer> surveyAnswerCollection;
 
     public User() {
     }
@@ -122,9 +110,12 @@ public class User implements Serializable {
         this.id = id;
     }
 
-    public User(Integer id, String role) {
+    public User(Integer id, String username, String role, boolean passwordChanged, boolean avatarUploaded) {
         this.id = id;
+        this.username = username;
         this.role = role;
+        this.passwordChanged = passwordChanged;
+        this.avatarUploaded = avatarUploaded;
     }
 
     public Integer getId() {
@@ -152,7 +143,7 @@ public class User implements Serializable {
     }
 
 
-    public Boolean isActive() {
+    public Boolean getActive() {
         return active;
     }
 
@@ -160,7 +151,7 @@ public class User implements Serializable {
         this.active = active;
     }
 
-    public boolean isPasswordChanged() {
+    public boolean getPasswordChanged() {
         return passwordChanged;
     }
 
@@ -168,7 +159,7 @@ public class User implements Serializable {
         this.passwordChanged = passwordChanged;
     }
 
-    public boolean isAvatarUploaded() {
+    public boolean getAvatarUploaded() {
         return avatarUploaded;
     }
 
@@ -176,68 +167,12 @@ public class User implements Serializable {
         this.avatarUploaded = avatarUploaded;
     }
 
-    public Collection<Feedback> getFeedbackCollection() {
-        return feedbackCollection;
+    public Collection<SurveyAnswer> getSurveyAnswerCollection() {
+        return surveyAnswerCollection;
     }
 
-    public void setFeedbackCollection(Collection<Feedback> feedbackCollection) {
-        this.feedbackCollection = feedbackCollection;
-    }
-
-    public Collection<Chatmessage> getChatmessageCollection() {
-        return chatmessageCollection;
-    }
-
-    public void setChatmessageCollection(Collection<Chatmessage> chatmessageCollection) {
-        this.chatmessageCollection = chatmessageCollection;
-    }
-
-    public Collection<Chatmessage> getChatmessageCollection1() {
-        return chatmessageCollection1;
-    }
-
-    public void setChatmessageCollection1(Collection<Chatmessage> chatmessageCollection1) {
-        this.chatmessageCollection1 = chatmessageCollection1;
-    }
-
-    public Collection<Payment> getPaymentCollection() {
-        return paymentCollection;
-    }
-
-    public void setPaymentCollection(Collection<Payment> paymentCollection) {
-        this.paymentCollection = paymentCollection;
-    }
-
-    public Collection<Visitorcard> getVisitorcardCollection() {
-        return visitorcardCollection;
-    }
-
-    public void setVisitorcardCollection(Collection<Visitorcard> visitorcardCollection) {
-        this.visitorcardCollection = visitorcardCollection;
-    }
-
-    public Collection<Invoice> getInvoiceCollection() {
-        return invoiceCollection;
-    }
-
-    public void setInvoiceCollection(Collection<Invoice> invoiceCollection) {
-        this.invoiceCollection = invoiceCollection;
-    }
-
-    public Collection<Surveyanswer> getSurveyanswerCollection() {
-        return surveyanswerCollection;
-    }
-
-    public void setSurveyanswerCollection(Collection<Surveyanswer> surveyanswerCollection) {
-        this.surveyanswerCollection = surveyanswerCollection;
-    }
-
-    public Collection<Locker> getLockerCollection() {
-        return lockerCollection;
-    }
-
-    public void setLockerCollection(Collection<Locker> lockerCollection) {
-        this.lockerCollection = lockerCollection;
+    public void setSurveyAnswerCollection(Collection<SurveyAnswer> surveyAnswerCollection) {
+        this.surveyAnswerCollection = surveyAnswerCollection;
     }
 
     @Override
@@ -264,7 +199,14 @@ public class User implements Serializable {
     public String toString() {
         return "com.ltlt.pojo.User[ id=" + id + " ]";
     }
+    public Collection<Payment> getPaymentCollection() {
+        return paymentCollection;
+    }
+    public void setPaymentCollection(Collection<Payment> paymentCollection) {
+        this.paymentCollection = paymentCollection;
+    }
 
+  
 
     public String getEmail() {
         return email;
@@ -290,6 +232,7 @@ public class User implements Serializable {
         this.username = username;
     }
 
+
     public String getPassword() {
         return password;
     }
@@ -314,4 +257,14 @@ public class User implements Serializable {
         this.role = role;
     }
 
+  
+
+    public Collection<Feedback> getFeedbackCollection() {
+        return feedbackCollection;
+    }
+
+    public void setFeedbackCollection(Collection<Feedback> feedbackCollection) {
+        this.feedbackCollection = feedbackCollection;
+    }
+    
 }

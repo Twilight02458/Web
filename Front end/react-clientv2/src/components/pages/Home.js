@@ -1,6 +1,6 @@
 import React from "react";
 import { Container, Row, Col, Card } from "react-bootstrap";
-import { FaHome, FaComments, FaExclamationCircle, FaPoll, FaIdCard, FaUsers } from "react-icons/fa";
+import { FaHome, FaComments, FaPoll, FaIdCard, FaUsers, FaCommentAlt, FaDonate } from "react-icons/fa";
 
 function Home() {
   const features = [
@@ -13,11 +13,6 @@ function Home() {
       icon: <FaComments size={40} className="text-success mb-3" />,
       title: "Hệ thống chat",
       description: "Liên lạc với ban quản lý và cư dân khác một cách nhanh chóng"
-    },
-    {
-      icon: <FaExclamationCircle size={40} className="text-danger mb-3" />,
-      title: "Phản ánh",
-      description: "Gửi phản ánh và theo dõi tình trạng xử lý"
     },
     {
       icon: <FaPoll size={40} className="text-warning mb-3" />,
@@ -33,6 +28,16 @@ function Home() {
       icon: <FaUsers size={40} className="text-secondary mb-3" />,
       title: "Quản lý khách",
       description: "Đăng ký và quản lý thông tin khách đến thăm"
+    },
+    {
+      icon: <FaCommentAlt size={40} className="text-secondary mb-3" />,
+      title: "Gửi phản ánh",
+      description: "Gửi phản ánh và yêu cầu đến ban quản lý"
+    },
+    {
+      icon: <FaDonate size={40} className="text-secondary mb-3" />,
+      title: "Thanh toán",
+      description: "Thanh toán các khoản phí dịch vụ"
     }
   ];
 

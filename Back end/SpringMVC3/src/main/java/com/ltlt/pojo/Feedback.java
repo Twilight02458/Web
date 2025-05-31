@@ -18,6 +18,7 @@ import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.Date;
@@ -31,8 +32,8 @@ import java.util.Date;
 @NamedQueries({
     @NamedQuery(name = "Feedback.findAll", query = "SELECT f FROM Feedback f"),
     @NamedQuery(name = "Feedback.findById", query = "SELECT f FROM Feedback f WHERE f.id = :id"),
-    @NamedQuery(name = "Feedback.findByCreatedAt", query = "SELECT f FROM Feedback f WHERE f.createdAt = :createdAt"),
-    @NamedQuery(name = "Feedback.findByStatus", query = "SELECT f FROM Feedback f WHERE f.status = :status")})
+    @NamedQuery(name = "Feedback.findByTitle", query = "SELECT f FROM Feedback f WHERE f.title = :title"),
+    @NamedQuery(name = "Feedback.findByCreatedAt", query = "SELECT f FROM Feedback f WHERE f.createdAt = :createdAt")})
 public class Feedback implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -41,18 +42,22 @@ public class Feedback implements Serializable {
     @Basic(optional = false)
     @Column(name = "id")
     private Integer id;
+    @Basic(optional = false)
+    @NotNull
+    @Size(min = 1, max = 255)
+    @Column(name = "title")
+    private String title;
+    @Basic(optional = false)
+    @NotNull
     @Lob
-    @Size(max = 65535)
+    @Size(min = 1, max = 65535)
     @Column(name = "content")
     private String content;
     @Column(name = "created_at")
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
-    @Size(max = 9)
-    @Column(name = "status")
-    private String status;
     @JoinColumn(name = "user_id", referencedColumnName = "id")
-    @ManyToOne
+    @ManyToOne(optional = false)
     private User userId;
 
     public Feedback() {
@@ -62,12 +67,26 @@ public class Feedback implements Serializable {
         this.id = id;
     }
 
+    public Feedback(Integer id, String title, String content) {
+        this.id = id;
+        this.title = title;
+        this.content = content;
+    }
+
     public Integer getId() {
         return id;
     }
 
     public void setId(Integer id) {
         this.id = id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     public String getContent() {
@@ -84,14 +103,6 @@ public class Feedback implements Serializable {
 
     public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
     }
 
     public User getUserId() {

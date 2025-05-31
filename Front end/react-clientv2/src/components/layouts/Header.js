@@ -1,7 +1,7 @@
 import React, { useContext } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Navbar, Nav, Container, NavDropdown, Image } from "react-bootstrap";
-import { FaHome, FaSignInAlt, FaComments, FaIdCard, FaExclamationCircle, FaList, FaUsers, FaPoll, FaUserCircle } from "react-icons/fa";
+import { FaHome, FaSignInAlt, FaComments, FaIdCard, FaUsers, FaPoll, FaUserCircle, FaCreditCard, FaFileInvoiceDollar, FaCommentAlt } from "react-icons/fa";
 import { MyUserContext, MyDispatchContext } from "../../configs/Contexts";
 import cookie from "react-cookies";
 
@@ -44,14 +44,17 @@ const Header = () => {
                 </Nav.Link>
                 {user.role === "RESIDENT" && (
                   <>
-                    <Nav.Link as={Link} to="/submit-complaint" className="text-white fw-medium px-3">
-                      <FaExclamationCircle className="me-1" /> Gửi phản ánh
-                    </Nav.Link>
-                    <Nav.Link as={Link} to="/my-complaints" className="text-white fw-medium px-3">
-                      <FaList className="me-1" /> Phản ánh của tôi
-                    </Nav.Link>
                     <Nav.Link as={Link} to="/survey" className="text-white fw-medium px-3">
                       <FaPoll className="me-1" /> Khảo sát ý kiến
+                    </Nav.Link>
+                    <Nav.Link as={Link} to="/payment" className="text-white fw-medium px-3">
+                      <FaCreditCard className="me-1" /> Thanh toán
+                    </Nav.Link>
+                    <Nav.Link as={Link} to="/paymentdetail" className="text-white fw-medium px-3">
+                      <FaFileInvoiceDollar className="me-1" /> Hóa đơn
+                    </Nav.Link>
+                    <Nav.Link as={Link} to="/feedback" className="text-white fw-medium px-3">
+                      <FaCommentAlt className="me-1" /> Gửi phản ánh
                     </Nav.Link>
                   </>
                 )}

@@ -1,0 +1,48 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Danh sách khảo sát</title>
+    <th:block th:replace="base :: bootstrap"></th:block>
+</head>
+<body>
+    <!-- Header -->
+    <div th:replace="base :: header"></div>
+
+    <!-- Main content -->
+    <main class="container mt-4">
+        <h2 class="text-center text-primary mb-4">Danh sách các khảo sát</h2>
+
+        <table class="table table-bordered table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>STT</th>
+                    <th>Tiêu đề khảo sát</th>
+                    <th>Thời gian tạo</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="s, stat : ${surveys}">
+                    <td th:text="${stat.index + 1}">1</td>
+                    <td th:text="${s.title}">Tiêu đề</td>
+                    <td th:text="${#dates.format(s.createdAt, 'dd/MM/yyyy HH:mm')}">dd/MM/yyyy</td>                
+                    <td>
+                        <a th:href="@{/admin/survey/result/{surveyId}(surveyId=${s.id})}" class="btn btn-info btn-sm">Xem kết quả</a>
+
+                        <form th:action="@{/admin/survey/delete/{id}(id=${s.id})}" method="post" style="display:inline"
+                              onsubmit="return confirm('Bạn có chắc chắn muốn xóa khảo sát này?');">
+                            <input type="hidden" name="_method" value="delete" />
+                            <button type="submit" class="btn btn-danger btn-sm ms-2">🗑️ Xóa</button>
+                        </form>
+                    </td>
+
+                </tr>
+            </tbody>
+        </table>
+    </main>
+
+    <!-- Footer -->
+    <div th:replace="base :: footer"></div>
+</body>
+</html>

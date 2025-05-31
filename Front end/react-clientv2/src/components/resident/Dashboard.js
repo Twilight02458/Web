@@ -5,7 +5,7 @@ function ResidentDashboard() {
     <div className="resident-dashboard">
       <h1>Resident Dashboard</h1>
       <p>Welcome, Resident! View your services here.</p>
-      {/* TODO: Add quick links to payments, lockers, complaints, surveys */}
+      {/* TODO: Add quick links to payments, lockers, surveys */}
     </div>
   );
 }

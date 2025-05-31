@@ -16,9 +16,12 @@ export const endpoints = {
     'family-members-by-resident': '/secure/family-members/resident',
     'user-survey': '/user/survey',
     'user-survey-submit': '/user/survey/submit',
-    'complaints': '/complaints',
-    'complaints-by-user': '/complaints/user',
-    'complaint-detail': '/complaints'
+    'payment-create': '/payment/create',
+    'payment-result': '/payment/vnpay-return',
+    'user-payment': '/user/my-payment',
+    'user-paymentdetail': '/user/paymentdetail',
+    'user-payment-proof': '/user/payment-proof',
+    'user-feedback': '/user/feedback'
 }
 
 export const authApis = () => {

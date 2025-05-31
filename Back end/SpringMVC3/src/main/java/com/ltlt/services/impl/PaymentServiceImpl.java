@@ -1,25 +1,35 @@
 package com.ltlt.services.impl;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import com.ltlt.configs.VnPayConfig;
 import com.ltlt.dto.PaymentItemRequest;
+import com.ltlt.dto.PaymentProveRequest;
 import com.ltlt.dto.PaymentRequest;
+import com.ltlt.dto.ResidentPaymentRequest;
 import com.ltlt.pojo.Payment;
 import com.ltlt.pojo.PaymentItem;
+import com.ltlt.pojo.PaymentProve;
 import com.ltlt.pojo.User;
 import com.ltlt.repositories.PaymentItemRepository;
+import com.ltlt.repositories.PaymentProveRepository;
 import com.ltlt.repositories.PaymentRepository;
 import com.ltlt.repositories.UserRepository;
 import com.ltlt.services.PaymentService;
 import com.ltlt.services.UserService;
 import jakarta.servlet.http.HttpServletRequest;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class PaymentServiceImpl implements PaymentService {
@@ -85,6 +95,83 @@ public class PaymentServiceImpl implements PaymentService {
             item.setFeeType(itemReq.getFeeType());
             item.setAmount(itemReq.getAmount());
             paymentItemRepository.save(item);
+        }
+    }
+
+    @Override
+    public List<ResidentPaymentRequest> getApprovedPaymentsForResident(String username) {
+        User user = userRepository.getUserByUsername(username);
+        if (user == null) {
+            throw new RuntimeException("User not found");
+        }
+
+        List<Payment> payments = paymentRepository.getApprovedPaymentsByUserId(user.getId());
+
+        return payments.stream()
+                .map(payment -> {
+                    // Lấy items bằng repository, không dùng collection LAZY
+                    List<PaymentItem> items = paymentItemRepository.getItemsByPaymentId(payment.getId());
+                    return new ResidentPaymentRequest(payment, items);
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Autowired
+    private Cloudinary cloudinary;
+
+    @Override
+    @Transactional
+    public PaymentProve savePaymentProof(int paymentId, String transactionCode, MultipartFile file, String username) throws IOException {
+        Payment payment = paymentRepository.findById(paymentId);
+        if (payment == null) {
+            throw new RuntimeException("Không tìm thấy payment");
+        }
+
+        Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
+        String imageUrl = uploadResult.get("secure_url").toString();
+
+        PaymentProve prove = new PaymentProve();
+        prove.setPaymentId(payment);
+        prove.setTransactionCode(transactionCode);
+        prove.setProofImageUrl(imageUrl);
+        prove.setSubmittedAt(new Date());
+
+        paymentRepository.save(prove);
+        return prove;
+    }
+
+    @Autowired
+    private PaymentProveRepository paymentProveRepository;
+
+    public List<PaymentProve> getPendingProves(int userId) {
+        return paymentProveRepository.getPendingProvesByUserId(userId);
+    }
+
+    @Override
+    public PaymentProveRequest getPendingProveByUserId(int userId) {
+        List<PaymentProve> proves = paymentProveRepository.getPendingProvesByUserId(userId);
+        if (proves != null && !proves.isEmpty()) {
+            return new PaymentProveRequest(proves.get(0)); // Lấy chứng từ đầu tiên đang chờ xử lý
+        }
+        return null;
+    }
+
+    @Override
+    public void approvePaymentProve(int proveId) {
+        PaymentProve prove = paymentProveRepository.getById(proveId);
+
+        if (prove != null && prove.getPaymentId() != null) {
+            Payment payment = prove.getPaymentId();
+
+            if ("PENDING".equalsIgnoreCase(payment.getStatus())) {
+                payment.setStatus("APPROVED");
+
+                // Lưu payment riêng
+                paymentRepository.save(payment);
+
+                // Lưu PaymentProve (nếu có cập nhật gì)
+                paymentProveRepository.save(prove);
+            }
         }
     }
 

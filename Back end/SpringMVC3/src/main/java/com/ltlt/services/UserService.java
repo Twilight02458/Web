@@ -18,22 +18,22 @@ public interface UserService extends UserDetailsService {
 
     User getUserByUsername(String username);
 
-    User getUserById(int userId);
-
     User addUser(Map<String, String> params, MultipartFile avatar);
+
+    User getUserById(int userId);
 
     boolean authenticate(String username, String password);
 
-    boolean updateUser(User user);
-
-    boolean deleteUser(int userId);     // Xóa user
-
-    boolean changePassword(int userId, String newPassword);
+    void changePassword(int userId, String newPassword); // Thay đổi mật khẩu
 
     void uploadAvatar(int userId, MultipartFile avatar);
 
+    boolean deleteUser(int userId);     // Xóa user
+
+    User updateUser(User user);         // Sửa thông tin user
+
     List<User> getAllUsers();           // Danh sách tất cả user
-    
+
     List<User> getUsers(int page, int size, String keyword);
 
     void toggleUserStatus(int userId);

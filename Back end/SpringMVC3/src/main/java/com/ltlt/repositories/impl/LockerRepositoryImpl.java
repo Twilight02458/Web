@@ -11,6 +11,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,11 +25,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class LockerRepositoryImpl implements LockerRepository {
 
     @Autowired
-    private SessionFactory sessionFactory;
+    private LocalSessionFactoryBean sessionFactory;
 
     @Override
     public List<Locker> getItemsByUserId(int userId) {
-        Session s = sessionFactory.getCurrentSession();
+        Session s = sessionFactory.getObject().getCurrentSession();
         Query<Locker> q = s.createQuery("FROM Locker WHERE userId.id = :uid", Locker.class);
         q.setParameter("uid", userId);
         return q.getResultList();
@@ -36,7 +37,7 @@ public class LockerRepositoryImpl implements LockerRepository {
 
     @Override
     public List<Locker> getPendingItemsByUserId(int userId) {
-        Session s = sessionFactory.getCurrentSession();
+        Session s = sessionFactory.getObject().getCurrentSession();
         Query<Locker> q = s.createQuery("FROM Locker WHERE userId.id = :uid AND status = 'pending'", Locker.class);
         q.setParameter("uid", userId);
         return q.getResultList();
@@ -44,14 +45,14 @@ public class LockerRepositoryImpl implements LockerRepository {
 
     @Override
     public void addLockerItem(Locker item) {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = sessionFactory.getObject().getCurrentSession();
         session.save(item);
     }
    
 
     @Override
     public boolean updateStatus(int lockerId, String status) {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = sessionFactory.getObject().getCurrentSession();
         Locker locker = session.get(Locker.class, lockerId);
         if (locker != null) {
             locker.setStatus(status);

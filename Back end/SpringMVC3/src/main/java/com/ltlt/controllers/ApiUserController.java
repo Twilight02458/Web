@@ -4,19 +4,36 @@
  */
 package com.ltlt.controllers;
 
+import com.ltlt.dto.FeedbackRequest;
+import com.ltlt.dto.PaymentProveRequest;
 import com.ltlt.dto.ResidentPaymentRequest;
+import com.ltlt.dto.SurveyAnswerRequest;
+import com.ltlt.dto.SurveyRequest;
+import com.ltlt.pojo.Feedback;
 import com.ltlt.pojo.Locker;
 import com.ltlt.pojo.Payment;
 import com.ltlt.pojo.PaymentItem;
+import com.ltlt.pojo.PaymentProve;
+import com.ltlt.pojo.Survey;
+import com.ltlt.pojo.SurveyAnswer;
+import com.ltlt.pojo.SurveyOption;
+import com.ltlt.pojo.SurveyQuestion;
 import com.ltlt.pojo.User;
+import com.ltlt.repositories.FeedbackRepository;
 import com.ltlt.repositories.PaymentItemRepository;
 import com.ltlt.repositories.PaymentRepository;
 import com.ltlt.repositories.UserRepository;
+import com.ltlt.services.FeedbackService;
 import com.ltlt.services.LockerService;
+import com.ltlt.services.PaymentService;
+import com.ltlt.services.SurveyService;
 import com.ltlt.services.UserService;
 import com.ltlt.utils.JwtUtils;
 import java.security.Principal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -27,8 +44,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -65,7 +85,7 @@ public class ApiUserController {
                         .body(Map.of("errorCode", "USER_NOT_FOUND", "message", "Tên đăng nhập không tồn tại"));
             }
 
-            if (!user.isActive()) {
+            if (!user.getActive()) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(Map.of("errorCode", "ACCOUNT_LOCKED", "message", "Tài khoản đã bị khoá"));
             }
@@ -78,8 +98,8 @@ public class ApiUserController {
             String token = JwtUtils.generateToken(user);
             return ResponseEntity.ok().body(Map.of(
                     "token", token,
-                    "passwordChanged", user.isPasswordChanged(),
-                    "avatarUploaded", user.isAvatarUploaded()
+                    "passwordChanged", user.getPasswordChanged(),
+                    "avatarUploaded", user.getAvatarUploaded()
             ));
 
         } catch (Exception e) {
@@ -149,7 +169,7 @@ public class ApiUserController {
 
     @Autowired
     private LockerService lockerService;
-    
+
     @GetMapping("/user/locker")
     public ResponseEntity<List<Locker>> getPendingLockers(Principal principal) {
         User user = this.userDetailsService.getUserByUsername(principal.getName());
@@ -169,7 +189,6 @@ public class ApiUserController {
         User user = userRepository.getUserByUsername(username);
         System.out.println("User ID: " + user.getId());
 
-
         if (user == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy người dùng");
         }
@@ -184,6 +203,112 @@ public class ApiUserController {
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(result);
+    }
+
+    @Autowired
+    private PaymentService paymentService;
+
+    @GetMapping("/user/paymentdetail")
+    public ResponseEntity<List<ResidentPaymentRequest>> getMyApprovedPayments(Principal principal) {
+        String username = principal.getName();
+        List<ResidentPaymentRequest> result = paymentService.getApprovedPaymentsForResident(username);
+        return ResponseEntity.ok(result);
+    }
+    @Autowired
+    private SurveyService surveyService;
+
+//    @GetMapping("/user/survey")
+//    public ResponseEntity<Survey> getLatestSurveyForUser(Principal principal) {
+//        int userId = userDetailsService.getUserByUsername(principal.getName()).getId();
+//        Survey latestSurvey = surveyService.getLatestSurveyForUser(userId);
+//        return ResponseEntity.ok(latestSurvey);
+//    }
+    @GetMapping("/user/survey")
+    public ResponseEntity<?> getSurveyForUser(Principal principal) {
+        int userId = userDetailsService.getUserByUsername(principal.getName()).getId();
+        Survey survey = surveyService.getLatestSurveyForUser(userId);
+
+        if (survey == null) {
+            return ResponseEntity.ok(null);
+        }
+
+        SurveyRequest dto = surveyService.convertToRequest(survey);
+        return ResponseEntity.ok(dto);
+    }
+
+    @PostMapping("/user/survey/submit")
+    @Transactional
+    public ResponseEntity<?> submitSurvey(@RequestBody List<SurveyAnswerRequest> answers,
+            Principal principal) {
+        int userId = userDetailsService.getUserByUsername(principal.getName()).getId();
+
+        List<SurveyAnswer> entities = new ArrayList<>();
+        for (SurveyAnswerRequest req : answers) {
+            SurveyAnswer ans = new SurveyAnswer();
+            ans.setUserId(new User(userId));
+            ans.setSurveyId(new Survey(req.getSurveyId()));
+            ans.setQuestionId(new SurveyQuestion(req.getQuestionId()));
+            ans.setOptionId(new SurveyOption(req.getOptionId()));
+            ans.setAnsweredAt(new Date());
+            entities.add(ans);
+        }
+
+        surveyService.saveSurveyAnswers(entities);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/user/payment-proof")
+    public ResponseEntity<?> uploadProof(
+            @RequestParam("paymentId") int paymentId,
+            @RequestParam("transactionCode") String transactionCode,
+            @RequestParam("file") MultipartFile file,
+            Principal principal) {
+        try {
+            PaymentProve prove = paymentService.savePaymentProof(paymentId, transactionCode, file, principal.getName());
+            PaymentProveRequest dto = new PaymentProveRequest(prove);
+
+            return ResponseEntity.ok(dto);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Tải lên thất bại: " + e.getMessage()));
+        }
+    }
+
+    @Autowired
+    private FeedbackService feedbackService;
+
+    @Autowired
+    private FeedbackRepository feedbackRepository;
+
+    @PostMapping("/user/feedback")
+    @ResponseBody
+    public ResponseEntity<?> saveFeedback(@RequestBody FeedbackRequest request, Principal principal) {
+        try {
+            if (principal == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("message", "Bạn cần đăng nhập"));
+            }
+
+            User user = userDetailsService.getUserByUsername(principal.getName());
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("message", "Không tìm thấy user"));
+            }
+
+            Feedback feedback = new Feedback();
+            feedback.setTitle(request.getTitle());
+            feedback.setContent(request.getContent());
+            feedback.setCreatedAt(new Date());
+            feedback.setUserId(user);
+
+            feedbackRepository.save(feedback);
+
+            return ResponseEntity.ok(Map.of("message", "Phản ánh đã được gửi thành công"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Lỗi khi gửi phản ánh"));
+        }
     }
 
 }

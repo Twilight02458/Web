@@ -19,12 +19,11 @@ import { authApis, endpoints } from "./configs/Apis";
 import ResidentLocker from "./components/resident/ResidentLocker";
 import { Chat } from "./components/Chat";
 import RoomSelection from "./components/RoomSelection";
-import ComplaintForm from "./components/ComplaintForm";
-import ComplaintList from "./components/ComplaintList";
-import MyComplaints from "./components/MyComplaints";
 import FamilyMemberList from "./components/FamilyMemberList";
 import ResidentSurvey from "./components/resident/ResidentSurvey";
-import Complaints from "./components/Complaints/Complaints";
+import FeedbackForm from "./components/resident/FeedbackForm";
+import ResidentPayment from "./components/resident/ResidentPayment";
+import ResidentPaymentDetail from "./components/resident/ResidentPaymentDetail";
 
 const RequireAuth = ({ children }) => {
   const user = useContext(MyUserContext);
@@ -77,27 +76,15 @@ const App = () => {
                 <Route path="/locker" element={<ResidentLocker />} />
                 <Route path="/chat" element={<RoomSelection />} />
                 <Route path="/chat/:roomId" element={<Chat />} />
-                <Route path="/submit-complaint" element={
-                  <RequireAuth>
-                    <ComplaintForm />
-                  </RequireAuth>
-                } />
-                <Route path="/my-complaints" element={
-                  <RequireAuth>
-                    <MyComplaints />
-                  </RequireAuth>
-                } />
-                <Route path="/complaints" element={
-                  <RequireAuth>
-                    <Complaints />
-                  </RequireAuth>
-                } />
                 <Route path="/family-members" element={
                   <RequireAuth>
                     <FamilyMemberList />
                   </RequireAuth>
                 } />
                 <Route path="/survey" element={<ResidentSurvey />} />
+                <Route path="/feedback" element={<FeedbackForm />} />
+                <Route path="/payment" element={<ResidentPayment />} />
+                <Route path="/payment-detail" element={<ResidentPaymentDetail />} />
               </Routes>
             </RequireAuth>
           </Container>

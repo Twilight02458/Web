@@ -121,26 +121,20 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("User not found");
         }
 
-        user.setActive(!user.isActive()); // toggle true <-> false
+        user.setActive(!user.getActive()); // toggle true <-> false
         this.userRepo.updateUser(user);
     }
 
     @Override
-    public boolean changePassword(int userId, String newPassword) {
-        try {
-            User user = this.userRepo.getUserById(userId);
-            if (user == null) {
-                return false;
-            }
-
-            user.setPassword(this.passwordEncoder.encode(newPassword));
-            user.setPasswordChanged(true);
-            this.userRepo.updateUser(user);
-            return true;
-        } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, "Error while changing password", ex);
-            return false;
+    public void changePassword(int userId, String newPassword) {
+        User user = this.userRepo.getUserById(userId);
+        if (user == null) {
+            throw new RuntimeException("User not found");
         }
+
+        user.setPassword(this.passwordEncoder.encode(newPassword));
+        user.setPasswordChanged(true);
+        this.userRepo.updateUser(user);
     }
 
     @Override
@@ -171,14 +165,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public boolean updateUser(User user) {
-        try {
-            this.userRepo.updateUser(user);
-            return true;
-        } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, "Error while updating user", ex);
-            return false;
-        }
+    public User updateUser(User user) {
+        this.userRepo.updateUser(user);
+        return user;
     }
 
     @Override
@@ -190,7 +179,6 @@ public class UserServiceImpl implements UserService {
     public List<User> getUsers(int page, int size, String keyword) {
         return userRepo.getUsers(page, size, keyword);
     }
-
     @Override
     public User getUserById(int userId) {
         return this.userRepo.getUserById(userId);
