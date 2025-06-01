@@ -17,4 +17,6 @@ public interface PaymentRepository {
     void save(PaymentProve prove);
     Payment findById(int id);
 List<Payment> getAllPaymentByUserId(int userId);
+List<Payment> getPaymentByUserIdAndStatus(int userId, String status);
+
 }

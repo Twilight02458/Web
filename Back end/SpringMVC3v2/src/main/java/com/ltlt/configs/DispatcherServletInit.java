@@ -23,7 +23,8 @@ public class DispatcherServletInit extends AbstractAnnotationConfigDispatcherSer
             ThymeleafConfig.class,
             HibernateConfigs.class,
             SpringSecurityConfigs.class,
-            VnPayConfig.class
+            VnPayConfig.class,
+            TwilioConfig.class
         };
     }
 

@@ -8,28 +8,33 @@
 <div th:replace="base :: header"></div>
 
 <div class="container mt-5">
-    <h3>Danh sách phản ánh của cư dân</h3>
+    <h3 class="mb-4 text-primary">📢 Danh sách phản ánh của cư dân</h3>
 
     <!-- Flash Message -->
-    <div th:if="${msg}" class="alert alert-success" th:text="${msg}"></div>
+    <div th:if="${msg}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${msg}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+    </div>
 
     <!-- Không có phản ánh -->
     <div th:if="${feedbacks.isEmpty()}">
-        <p class="text-muted">Không có phản ánh nào.</p>
+        <div class="alert alert-info">Hiện không có phản ánh nào từ cư dân.</div>
     </div>
 
     <!-- Danh sách phản ánh -->
-    <div th:each="fb : ${feedbacks}" class="card mb-3">
+    <div th:each="fb : ${feedbacks}" class="card border-primary mb-3 shadow-sm">
         <div class="card-body">
-            
-            <h6 class="card-subtitle mb-2 text-muted">
-                <strong th:text="${fb.userId.username}"></strong> -
-                <span th:text="${#dates.format(fb.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
-            </h6>
+            <div class="mb-2 text-muted small">
+                👤 <strong th:text="${fb.userId.username}"></strong>
+                &nbsp;&bull;&nbsp;
+                🕒 <span th:text="${#dates.format(fb.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
+            </div>
+
             <h5 class="card-title" th:text="${fb.title}"></h5>
             <p class="card-text" th:text="${fb.content}"></p>
-            <form th:action="@{/admin/feedback/delete/{id}(id=${fb.id})}" method="post">          
-                <button type="submit" class="btn btn-danger btn-sm">Đã xử lý / Xóa</button>
+
+            <form th:action="@{/admin/feedback/delete/{id}(id=${fb.id})}" method="post" onsubmit="return confirm('Bạn có chắc muốn xóa phản ánh này không?');">
+                <button type="submit" class="btn btn-outline-danger btn-sm">✅ Đã xử lý / Xóa</button>
             </form>
         </div>
     </div>

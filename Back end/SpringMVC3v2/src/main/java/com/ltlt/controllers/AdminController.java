@@ -25,6 +25,7 @@ import com.ltlt.repositories.UserRepository;
 import com.ltlt.services.FeedbackService;
 import com.ltlt.services.LockerService;
 import com.ltlt.services.PaymentService;
+import com.ltlt.services.SmsService;
 import com.ltlt.services.SurveyService;
 import com.ltlt.services.UserService;
 import java.time.LocalDateTime;
@@ -59,12 +60,14 @@ public class AdminController {
 
     @Autowired
     private UserService userService;
-      @Autowired
+    @Autowired
     private UserRepository userRepository;
     @Autowired
     private PaymentRepository paymentRepository;
     @Autowired
     private PaymentProveRepository paymentProveRepository;
+    @Autowired
+    private SmsService smsService;
 
     @GetMapping("/users")
     public String listUsers(Model model,
@@ -164,26 +167,33 @@ public class AdminController {
             @RequestParam("itemName") String itemName,
             RedirectAttributes redirectAttributes) {
         try {
-            User user = new User();
-            user.setId(userId);
+            User user = userRepository.getUserById(userId);
+            if (user == null) {
+                redirectAttributes.addFlashAttribute("msg", "Không tìm thấy cư dân.");
+                return "redirect:/admin/locker?userId=" + userId;
+            }
 
             Locker locker = new Locker();
-            locker.setUserId(user); // GÁN ĐÚNG userId
+            locker.setUserId(user);
             locker.setItemName(itemName);
             locker.setStatus("PENDING");
-            locker.setReceivedAt(new Date()); // java.util.Date
+            locker.setReceivedAt(new Date());
 
             lockerService.addNewItem(locker);
+            String message = "Chung cư thông báo: bạn có đồ mới nhận tại sảnh lễ tân. Vui lòng đến nhận.";
+
+            smsService.sendSms(message);
+
+            redirectAttributes.addFlashAttribute("msg", "Thêm thành công và đã gửi SMS!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("msg", "Thêm thất bại: " + e.getMessage());
         }
 
         return "redirect:/admin/locker?userId=" + userId;
     }
-
     @Autowired
     private PaymentService paymentService;
-    
+
     @Autowired
     private PaymentItemRepository paymentItemRepository;
 
@@ -214,8 +224,8 @@ public class AdminController {
         model.addAttribute("transactionCode", String.valueOf(System.currentTimeMillis()));
         return "create-payment";
     }
-    
-     @GetMapping("/user/payment-status")
+
+    @GetMapping("/user/payment-status")
     public String getUserPaymentStatuses(Model model) {
         List<User> users = userRepository.getAllUsers();
 
@@ -238,16 +248,22 @@ public class AdminController {
         return "payment-status";
     }
 
-    
-
     @GetMapping("/user/{userId}/payments")
-    public String getUserPayments(@PathVariable("userId") int userId, Model model) {
+    public String getUserPayments(@PathVariable("userId") int userId,
+            @RequestParam(value = "status", required = false) String status,
+            Model model) {
         User user = userRepository.getUserById(userId);
         if (user == null) {
             return "redirect:/user/payment-status";
         }
 
-        List<Payment> payments = paymentRepository.getPaymentByUserId(userId);
+        List<Payment> payments;
+
+        if (status != null && !status.isBlank()) {
+            payments = paymentRepository.getPaymentByUserIdAndStatus(userId, status.trim());
+        } else {
+            payments = paymentRepository.getPaymentByUserId(userId);
+        }
 
         List<ResidentPaymentRequest> paymentDetails = payments.stream()
                 .map(p -> new ResidentPaymentRequest(p, paymentItemRepository.getItemsByPaymentId(p.getId())))
@@ -255,16 +271,17 @@ public class AdminController {
 
         model.addAttribute("user", user);
         model.addAttribute("payments", paymentDetails);
+        model.addAttribute("status", status); // Để giữ lại trạng thái khi render lại
         return "user-payments";
     }
 
     @GetMapping("/user/{userId}/payment-proves/pending")
-    public String showPendingPaymentProve(@PathVariable("userId") int userId, Model model) {
-        PaymentProveRequest prove = paymentService.getPendingProveByUserId(userId);
-        if (prove == null) {
-            return "redirect:/admin/user-status"; // Trở lại nếu không có chứng từ nào
+    public String showPendingPaymentProves(@PathVariable("userId") int userId, Model model) {
+        List<PaymentProveRequest> proves = paymentService.getPendingProvesByUserId(userId);
+        if (proves.isEmpty()) {
+            return "redirect:/admin/user-status";
         }
-        model.addAttribute("prove", prove);
+        model.addAttribute("proves", proves);
         return "payment-prove-process";
     }
 
@@ -273,10 +290,10 @@ public class AdminController {
         paymentService.approvePaymentProve(id);
         return "redirect:/admin/user/payment-status";
     }
-    
+
     @GetMapping("/users/{userId}/full-payments")
-public String viewUserPayments(@PathVariable("userId") Integer userId, Model model) {
-    User user = userRepository.getUserById(userId);
+    public String viewUserPayments(@PathVariable("userId") Integer userId, Model model) {
+        User user = userRepository.getUserById(userId);
         if (user == null) {
             return "redirect:/user/payment-status";
         }
@@ -290,9 +307,8 @@ public String viewUserPayments(@PathVariable("userId") Integer userId, Model mod
         model.addAttribute("user", user);
         model.addAttribute("payments", paymentDetails);
 
-    return "user-payments"; // View Thymeleaf hiển thị danh sách hóa đơn thanh toán
-}
-
+        return "user-payments"; // View Thymeleaf hiển thị danh sách hóa đơn thanh toán
+    }
 
     @Autowired
     private SurveyService surveyService;
@@ -360,7 +376,6 @@ public String viewUserPayments(@PathVariable("userId") Integer userId, Model mod
         return "redirect:/admin/surveys";
     }
 
-    
     @Autowired
     private FeedbackService feedbackService;
 
@@ -377,8 +392,6 @@ public String viewUserPayments(@PathVariable("userId") Integer userId, Model mod
         redirectAttributes.addFlashAttribute("msg", "Phản ánh đã được xóa.");
         return "redirect:/admin/feedback";
     }
-
-   
 
 }
 

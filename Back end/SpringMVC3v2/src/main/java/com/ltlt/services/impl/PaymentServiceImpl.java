@@ -148,13 +148,13 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public PaymentProveRequest getPendingProveByUserId(int userId) {
-        List<PaymentProve> proves = paymentProveRepository.getPendingProvesByUserId(userId);
-        if (proves != null && !proves.isEmpty()) {
-            return new PaymentProveRequest(proves.get(0)); // Lấy chứng từ đầu tiên đang chờ xử lý
-        }
-        return null;
-    }
+    public List<PaymentProveRequest> getPendingProvesByUserId(int userId) {
+    List<PaymentProve> proves = paymentProveRepository.getPendingProvesByUserId(userId);
+    return proves.stream()
+                 .map(PaymentProveRequest::new)
+                 .collect(Collectors.toList());
+}
+
 
     @Override
     public void approvePaymentProve(int proveId) {
@@ -174,5 +174,5 @@ public class PaymentServiceImpl implements PaymentService {
             }
         }
     }
-
+    
 }

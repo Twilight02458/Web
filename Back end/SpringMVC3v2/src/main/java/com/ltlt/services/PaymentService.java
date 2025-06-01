@@ -19,7 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 public interface PaymentService {
     void savePayment(String username, PaymentRequest paymentRequest);
      List<ResidentPaymentRequest> getApprovedPaymentsForResident(String username);
-    PaymentProveRequest getPendingProveByUserId(int userId);
+    List<PaymentProveRequest> getPendingProvesByUserId(int userId);
     void approvePaymentProve(int proveId);
      PaymentProve savePaymentProof(int paymentId, String transactionCode, MultipartFile file, String username) throws IOException;
 }

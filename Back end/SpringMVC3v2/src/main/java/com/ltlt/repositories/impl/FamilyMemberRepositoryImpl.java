@@ -2,87 +2,99 @@ package com.ltlt.repositories.impl;
 
 import com.ltlt.pojo.FamilyMember;
 import com.ltlt.repositories.FamilyMemberRepository;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.Query;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.hibernate.Session;
+import org.hibernate.query.Query;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Repository
+@Transactional
 public class FamilyMemberRepositoryImpl implements FamilyMemberRepository {
+
     private static final Logger LOGGER = Logger.getLogger(FamilyMemberRepositoryImpl.class.getName());
-    
-    @PersistenceContext
-    private EntityManager em;
+
+    @Autowired
+    private LocalSessionFactoryBean factory;
 
     @Override
     public boolean addFamilyMember(FamilyMember familyMember) {
+        Session session = factory.getObject().getCurrentSession();
         try {
-            em.persist(familyMember);
+            session.persist(familyMember);
             return true;
         } catch (Exception e) {
-            LOGGER.severe("Error adding family member: " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "Error adding family member: {0}", e.getMessage());
             return false;
         }
     }
 
     @Override
     public boolean updateFamilyMember(FamilyMember familyMember) {
+        Session session = factory.getObject().getCurrentSession();
         try {
-            em.merge(familyMember);
+            session.update(familyMember);
             return true;
         } catch (Exception e) {
-            LOGGER.severe("Error updating family member: " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "Error updating family member: {0}", e.getMessage());
             return false;
         }
     }
 
     @Override
     public boolean deleteFamilyMember(int id) {
+        Session session = factory.getObject().getCurrentSession();
         try {
-            FamilyMember familyMember = em.find(FamilyMember.class, id);
-            if (familyMember != null) {
-                em.remove(familyMember);
+            FamilyMember member = session.get(FamilyMember.class, id);
+            if (member != null) {
+                session.delete(member);
                 return true;
             }
             return false;
         } catch (Exception e) {
-            LOGGER.severe("Error deleting family member: " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "Error deleting family member: {0}", e.getMessage());
             return false;
         }
     }
 
     @Override
     public List<FamilyMember> getFamilyMembersByResidentId(int residentId) {
+        Session session = factory.getObject().getCurrentSession();
         try {
-            Query q = em.createQuery("FROM FamilyMember f WHERE f.residentId.id = :residentId");
-            q.setParameter("residentId", residentId);
-            return q.getResultList();
+            String hql = "FROM FamilyMember f WHERE f.residentId.id = :residentId";
+            Query<FamilyMember> query = session.createQuery(hql, FamilyMember.class);
+            query.setParameter("residentId", residentId);
+            return query.getResultList();
         } catch (Exception e) {
-            LOGGER.severe("Error getting family members by resident ID: " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "Error getting family members by resident ID: {0}", e.getMessage());
             return null;
         }
     }
 
     @Override
     public FamilyMember getFamilyMemberById(int id) {
+        Session session = factory.getObject().getCurrentSession();
         try {
-            return em.find(FamilyMember.class, id);
+            return session.get(FamilyMember.class, id);
         } catch (Exception e) {
-            LOGGER.severe("Error getting family member by ID: " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "Error getting family member by ID: {0}", e.getMessage());
             return null;
         }
     }
 
     @Override
     public List<FamilyMember> getAllFamilyMembers() {
+        Session session = factory.getObject().getCurrentSession();
         try {
-            Query q = em.createQuery("FROM FamilyMember");
-            return q.getResultList();
+            Query<FamilyMember> query = session.createQuery("FROM FamilyMember", FamilyMember.class);
+            return query.getResultList();
         } catch (Exception e) {
-            LOGGER.severe("Error getting all family members: " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "Error getting all family members: {0}", e.getMessage());
             return null;
         }
     }
-} 
+}

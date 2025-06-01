@@ -257,22 +257,26 @@ public class ApiUserController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/user/payment-proof")
-    public ResponseEntity<?> uploadProof(
-            @RequestParam("paymentId") int paymentId,
-            @RequestParam("transactionCode") String transactionCode,
-            @RequestParam("file") MultipartFile file,
-            Principal principal) {
-        try {
-            PaymentProve prove = paymentService.savePaymentProof(paymentId, transactionCode, file, principal.getName());
-            PaymentProveRequest dto = new PaymentProveRequest(prove);
+  @PostMapping("/user/payment-proof")
+public ResponseEntity<?> uploadProof(
+        @RequestParam("paymentId") int paymentId,
+        @RequestParam("transactionCode") String transactionCode,
+        @RequestParam("file") MultipartFile file,
+        Principal principal) {
+    try {
+        PaymentProve prove = paymentService.savePaymentProof(paymentId, transactionCode, file, principal.getName());
+        PaymentProveRequest dto = new PaymentProveRequest(prove);
 
-            return ResponseEntity.ok(dto);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("message", "Tải lên thất bại: " + e.getMessage()));
-        }
+        return ResponseEntity.ok(dto);
+    } catch (RuntimeException e) {
+        // Nếu sai mã giao dịch hoặc lỗi do logic nghiệp vụ thì trả về lỗi 400 Bad Request
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("message", e.getMessage()));
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("message", "Tải lên thất bại: " + e.getMessage()));
     }
+}
 
     @Autowired
     private FeedbackService feedbackService;

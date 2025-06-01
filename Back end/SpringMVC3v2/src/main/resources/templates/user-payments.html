@@ -12,7 +12,21 @@
     <div th:replace="base :: header"></div>
 
     <!-- Main Content -->
-    <main class="container mt-4">
+    <main class="container mt-4">    
+        <form method="get" class="row g-2 mb-3" th:action="@{/admin/user/{userId}/payments(userId=${user.id})}">
+            <div class="col-auto">
+                <select name="status" class="form-select">              
+                    <option th:value="PENDING" th:selected="${status == 'PENDING'}">Chờ thanh toán</option>
+                    <option th:value="APPROVED" th:selected="${status == 'APPROVED'}">Đã thanh toán</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">Lọc</button>
+            </div>
+        </form>
+
+
+
         <h3 th:text="'Chi tiết hóa đơn của cư dân: ' + ${user.lastName} + ' ' + ${user.firstName}"></h3>
 
         <div th:if="${payments.isEmpty()}" class="alert alert-info mt-3">
