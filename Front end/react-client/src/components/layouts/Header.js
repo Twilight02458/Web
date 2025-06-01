@@ -71,6 +71,11 @@ const Header = () => {
               </Nav.Link>
             )}
             {user && user.role === "RESIDENT" && !isLoginPage && (
+              <Nav.Link as={Link} to="/feedback" className="px-3 text-light">
+              Phản ánh
+              </Nav.Link>
+            )}
+            {user && user.role === "RESIDENT" && !isLoginPage && (
               <Nav.Link as={Link} to="/" className="px-3 text-light">
                 <FaHome className="me-1" />
                 Trang chủ
